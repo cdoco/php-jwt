@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("jwt", "for jwt support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("jwt", "enable jwt support", "no");
+
+if (PHP_JWT != "no") {
+	EXTENSION("jwt", "jwt.c", PHP_EXTNAME_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+}
+
