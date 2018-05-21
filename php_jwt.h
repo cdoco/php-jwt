@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author:                                                              |
+  | Author:   ZiHang Gao <ocdoco@gmail.com>                              |
   +----------------------------------------------------------------------+
 */
 
@@ -26,40 +26,42 @@ extern zend_module_entry jwt_module_entry;
 
 #define PHP_JWT_VERSION "0.1.0" /* Replace with version number for your extension */
 
-#ifdef PHP_WIN32
-#	define PHP_JWT_API __declspec(dllexport)
-#elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_JWT_API __attribute__ ((visibility("default")))
-#else
-#	define PHP_JWT_API
-#endif
-
 #ifdef ZTS
 #include "TSRM.h"
 #endif
 
-/*
-  	Declare any global variables you may need between the BEGIN
-	and END macros here:
+/** JWT algorithm types. */
+typedef enum jwt_alg {
+	JWT_ALG_NONE = 0,
+	JWT_ALG_HS256,
+	JWT_ALG_HS384,
+	JWT_ALG_HS512,
+	JWT_ALG_RS256,
+	JWT_ALG_RS384,
+	JWT_ALG_RS512,
+	JWT_ALG_ES256,
+	JWT_ALG_ES384,
+	JWT_ALG_ES512,
+	JWT_ALG_TERM
+} jwt_alg_t;
 
-ZEND_BEGIN_MODULE_GLOBALS(jwt)
-	zend_long  global_value;
-	char *global_string;
-ZEND_END_MODULE_GLOBALS(jwt)
-*/
+#define JWT_ALG_INVAL JWT_ALG_TERM
 
-/* Always refer to the globals in your function as JWT_G(variable).
-   You are encouraged to rename these macros something shorter, see
-   examples in any other php module directory.
-*/
-#define JWT_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(jwt, v)
+/** Opaque JWT object. */
+typedef struct jwt {
+	jwt_alg_t alg;
+	zend_string *key;
+	zend_string *str;
+} jwt_t;
+
+int jwt_sign_sha_hmac(jwt_t *jwt, char **out, unsigned int *len);
+int jwt_verify_sha_hmac(jwt_t *jwt, const char *sig);
 
 #if defined(ZTS) && defined(COMPILE_DL_JWT)
 ZEND_TSRMLS_CACHE_EXTERN()
 #endif
 
 #endif	/* PHP_JWT_H */
-
 
 /*
  * Local variables:

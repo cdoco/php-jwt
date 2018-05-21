@@ -12,7 +12,7 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author:                                                              |
+  | Author:   ZiHang Gao <ocdoco@gmail.com>                              |
   +----------------------------------------------------------------------+
 */
 
@@ -24,148 +24,390 @@
 
 #include "php.h"
 #include "php_ini.h"
+
+#include "zend_smart_str.h"
+#include "ext/json/php_json.h"
+#include "ext/standard/base64.h"
 #include "ext/standard/info.h"
+#include "ext/standard/php_string.h"
+
 #include "php_jwt.h"
 
-/* If you declare any globals in php_jwt.h uncomment this:
-ZEND_DECLARE_MODULE_GLOBALS(jwt)
-*/
-
-/* True global resources - no need for thread safety here */
-static int le_jwt;
-
-/* {{{ PHP_INI
- */
-/* Remove comments and fill if you need to have entries in php.ini
-PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("jwt.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_jwt_globals, jwt_globals)
-    STD_PHP_INI_ENTRY("jwt.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_jwt_globals, jwt_globals)
-PHP_INI_END()
-*/
-/* }}} */
-
-/* Remove the following function when you have successfully modified config.m4
-   so that your module can be compiled into PHP, it exists only for testing
-   purposes. */
-
-/* Every user-visible function in PHP should document itself in the source */
-/* {{{ proto string confirm_jwt_compiled(string arg)
-   Return a string to confirm that the module is compiled in */
-PHP_FUNCTION(confirm_jwt_compiled)
+const char *jwt_alg_str(jwt_alg_t alg)
 {
-	char *arg = NULL;
-	size_t arg_len, len;
-	zend_string *strg;
+	switch (alg) {
+	case JWT_ALG_NONE:
+		return "none";
+	case JWT_ALG_HS256:
+		return "HS256";
+	case JWT_ALG_HS384:
+		return "HS384";
+	case JWT_ALG_HS512:
+		return "HS512";
+	case JWT_ALG_RS256:
+		return "RS256";
+	case JWT_ALG_RS384:
+		return "RS384";
+	case JWT_ALG_RS512:
+		return "RS512";
+	case JWT_ALG_ES256:
+		return "ES256";
+	case JWT_ALG_ES384:
+		return "ES384";
+	case JWT_ALG_ES512:
+		return "ES512";
+	default:
+		return NULL;
+	}
+}
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &arg, &arg_len) == FAILURE) {
-		return;
+jwt_alg_t jwt_str_alg(const char *alg)
+{
+	if (alg == NULL)
+		return JWT_ALG_INVAL;
+
+	if (!strcasecmp(alg, "none"))
+		return JWT_ALG_NONE;
+	else if (!strcasecmp(alg, "HS256"))
+		return JWT_ALG_HS256;
+	else if (!strcasecmp(alg, "HS384"))
+		return JWT_ALG_HS384;
+	else if (!strcasecmp(alg, "HS512"))
+		return JWT_ALG_HS512;
+	else if (!strcasecmp(alg, "RS256"))
+		return JWT_ALG_RS256;
+	else if (!strcasecmp(alg, "RS384"))
+		return JWT_ALG_RS384;
+	else if (!strcasecmp(alg, "RS512"))
+		return JWT_ALG_RS512;
+	else if (!strcasecmp(alg, "ES256"))
+		return JWT_ALG_ES256;
+	else if (!strcasecmp(alg, "ES384"))
+		return JWT_ALG_ES384;
+	else if (!strcasecmp(alg, "ES512"))
+		return JWT_ALG_ES512;
+
+	return JWT_ALG_INVAL;
+}
+
+static int jwt_sign(jwt_t *jwt, char **out, unsigned int *len)
+{
+	switch (jwt->alg) {
+	/* HMAC */
+	case JWT_ALG_HS256:
+	case JWT_ALG_HS384:
+	case JWT_ALG_HS512:
+        return jwt_sign_sha_hmac(jwt, out, len);
+
+	/* RSA */
+	case JWT_ALG_RS256:
+	case JWT_ALG_RS384:
+	case JWT_ALG_RS512:
+
+	/* ECC */
+	case JWT_ALG_ES256:
+	case JWT_ALG_ES384:
+	case JWT_ALG_ES512:
+        return 0;
+
+	/* You wut, mate? */
+	default:
+		return EINVAL;
+	}
+}
+
+static int jwt_verify(jwt_t *jwt, const char *sig)
+{
+	switch (jwt->alg) {
+	/* HMAC */
+	case JWT_ALG_HS256:
+	case JWT_ALG_HS384:
+	case JWT_ALG_HS512:
+		return jwt_verify_sha_hmac(jwt, sig);
+
+	/* RSA */
+	case JWT_ALG_RS256:
+	case JWT_ALG_RS384:
+	case JWT_ALG_RS512:
+
+	/* ECC */
+	case JWT_ALG_ES256:
+	case JWT_ALG_ES384:
+	case JWT_ALG_ES512:
+		return 0;
+
+	/* You wut, mate? */
+	default:
+		return EINVAL;
+	}
+}
+
+int jwt_new(jwt_t **jwt)
+{
+	if (!jwt) {
+        return EINVAL;
+    }
+
+	*jwt = emalloc(sizeof(jwt_t));
+	if (!*jwt) {
+        return ENOMEM;
+    }
+
+	memset(*jwt, 0, sizeof(jwt_t));
+
+	return 0;
+}
+
+void jwt_free(jwt_t *jwt)
+{
+	if (!jwt) {
+        return;
+    }
+
+	efree(jwt);
+}
+
+char *jwt_b64_url_encode(zend_string *input)
+{
+    char *str;
+    size_t i, t;
+
+    zend_string *b64_str = NULL;
+    b64_str = php_base64_encode((const unsigned char *)ZSTR_VAL(input), ZSTR_LEN(input));
+
+    /* replace str */
+    size_t len = ZSTR_LEN(b64_str);
+    str = ZSTR_VAL(b64_str);
+
+	for (i = t = 0; i < len; i++) {
+		switch (str[i]) {
+		case '+':
+			str[t++] = '-';
+			break;
+		case '/':
+			str[t++] = '_';
+			break;
+		case '=':
+			break;
+		default:
+			str[t++] = str[i];
+		}
 	}
 
-	strg = strpprintf(0, "Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.", "jwt", arg);
+	str[t] = '\0';
 
-	RETURN_STR(strg);
+    zend_string_free(input);
+    zend_string_free(b64_str);
+
+    return str;
 }
-/* }}} */
-/* The previous line is meant for vim and emacs, so it can correctly fold and
-   unfold functions in source code. See the corresponding marks just before
-   function definition, where the functions purpose is also documented. Please
-   follow this convention for the convenience of others editing your code.
-*/
 
-
-/* {{{ php_jwt_init_globals
- */
-/* Uncomment this function if you have INI entries
-static void php_jwt_init_globals(zend_jwt_globals *jwt_globals)
+zend_string *jwt_b64_url_decode(zend_string *input)
 {
-	jwt_globals->global_value = 0;
-	jwt_globals->global_string = NULL;
-}
-*/
-/* }}} */
+    zend_string *rs = NULL;
+	char *new, *src = ZSTR_VAL(input);
+	int len, i, z;
 
-/* {{{ PHP_MINIT_FUNCTION
- */
+	/* Decode based on RFC-4648 URI safe encoding. */
+	len = ZSTR_LEN(input);
+	new = alloca(len + 4);
+	if (!new) {
+        return NULL;
+    }
+
+	for (i = 0; i < len; i++) {
+		switch (src[i]) {
+		case '-':
+			new[i] = '+';
+			break;
+		case '_':
+			new[i] = '/';
+			break;
+		default:
+			new[i] = src[i];
+		}
+	}
+	z = 4 - (i % 4);
+	if (z < 4) {
+		while (z--) {
+            new[i++] = '=';
+        }	
+	}
+	new[i] = '\0';
+
+    /* base64 decode */
+    rs = php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
+
+    zend_string_free(input);
+
+    return rs;
+}
+
+PHP_FUNCTION(jwt_encode)
+{
+    zval *claims = NULL, header, segments, buf;
+    zend_string *key = NULL, *alg = NULL, *b64_sig = NULL, *delim = zend_string_init(".", strlen("."), 0);
+    smart_str json_header = {0}, json_claims = {0};
+
+    char *sig = NULL;
+    unsigned int sig_len;
+    
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "aSS", &claims, &key, &alg) == FAILURE) {
+        return;
+    }
+
+    /* init */
+    array_init(&segments);
+    array_init(&header);
+
+    /* JWT header array */
+    add_assoc_string(&header, "typ", "JWT");
+    add_assoc_string(&header, "alg", ZSTR_VAL(alg));
+
+    /* json encode */
+    php_json_encode(&json_header, &header, 0);
+    php_json_encode(&json_claims, claims, 0);
+
+    /* base64 encode */
+    add_next_index_string(&segments, jwt_b64_url_encode(json_header.s));
+    add_next_index_string(&segments, jwt_b64_url_encode(json_claims.s));
+    
+    php_implode(delim, &segments, &buf);
+
+    /* set jwt struct */
+    jwt_t *jwt = NULL;
+
+    jwt_new(&jwt);
+    jwt->alg = jwt_str_alg(ZSTR_VAL(alg));
+    jwt->key = key;
+    jwt->str = Z_STR(buf);
+
+    /* sign */
+    if (jwt_sign(jwt, &sig, &sig_len)) {
+        efree(sig);
+        php_error(E_ERROR, "Signature error");
+    }
+    
+    b64_sig = php_base64_encode((const unsigned char *)sig, sig_len);
+
+    add_next_index_string(&segments, jwt_b64_url_encode(b64_sig));
+    php_implode(delim, &segments, return_value);
+
+    /* free */
+    efree(sig);
+    jwt_free(jwt);
+    zval_ptr_dtor(&buf);
+    zval_ptr_dtor(&header);
+    zval_ptr_dtor(&segments);
+    zend_string_free(delim);
+}
+
+PHP_FUNCTION(jwt_decode)
+{
+    zval jwt_arr, header, claims, *value = NULL;
+    zend_string *jwt = NULL, *key = NULL, *alg = NULL, *delim = zend_string_init(".", strlen("."), 0);
+
+    zend_ulong i;
+    smart_str segments = {0};
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS", &jwt, &key, &alg) == FAILURE) {
+        return;
+    }
+
+    /* init */
+    array_init(&jwt_arr);
+
+    /* get header and claims */
+    php_explode(delim, jwt, &jwt_arr, 3);
+
+    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL(jwt_arr), i, value) {
+        zend_string *vs = jwt_b64_url_decode(Z_STR_P(value));
+
+        switch (i) {
+		case 0:
+            smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
+            smart_str_appends(&segments, ".");
+
+            php_json_decode_ex(&header, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
+
+            zend_string *alg_str = zend_string_init("alg", strlen("alg"), 0);
+            zval *zalg = zend_hash_find(Z_ARRVAL(header), alg_str);
+            
+            if (!zend_string_equals(Z_STR_P(zalg), alg)) {
+                php_error(E_ERROR, "Algorithm not allowed");
+            }
+
+            zend_string_free(alg_str);
+			break;
+		case 1:
+            smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
+            php_json_decode_ex(&claims, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
+			break;
+        case 2:
+            smart_str_0(&segments);
+
+            /* set jwt struct */
+            jwt_t *jwt = NULL;
+
+            jwt_new(&jwt);
+            jwt->alg = jwt_str_alg(ZSTR_VAL(alg));
+            jwt->key = key;
+            jwt->str = segments.s;
+
+            if (jwt_verify(jwt, Z_STRVAL_P(value))) {
+                php_error(E_ERROR, "Signature verification failed");
+            }
+
+            jwt_free(jwt);
+			break;
+		}
+        zend_string_free(vs);
+    } ZEND_HASH_FOREACH_END();
+
+    /* free */
+    zend_string_free(delim);
+    zval_ptr_dtor(&jwt_arr);
+    smart_str_free(&segments);
+
+    RETURN_ZVAL(&claims, 0, 1);
+}
+
+const zend_function_entry jwt_functions[] = {
+    PHP_FE(jwt_encode,	NULL)
+    PHP_FE(jwt_decode,	NULL)
+    PHP_FE_END
+};
+
 PHP_MINIT_FUNCTION(jwt)
 {
-	/* If you have INI entries, uncomment these lines
-	REGISTER_INI_ENTRIES();
-	*/
 	return SUCCESS;
 }
-/* }}} */
 
-/* {{{ PHP_MSHUTDOWN_FUNCTION
- */
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
-	/* uncomment this line if you have INI entries
-	UNREGISTER_INI_ENTRIES();
-	*/
 	return SUCCESS;
 }
-/* }}} */
 
-/* Remove if there's nothing to do at request start */
-/* {{{ PHP_RINIT_FUNCTION
- */
-PHP_RINIT_FUNCTION(jwt)
-{
-#if defined(COMPILE_DL_JWT) && defined(ZTS)
-	ZEND_TSRMLS_CACHE_UPDATE();
-#endif
-	return SUCCESS;
-}
-/* }}} */
-
-/* Remove if there's nothing to do at request end */
-/* {{{ PHP_RSHUTDOWN_FUNCTION
- */
-PHP_RSHUTDOWN_FUNCTION(jwt)
-{
-	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MINFO_FUNCTION
- */
 PHP_MINFO_FUNCTION(jwt)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "jwt support", "enabled");
+    php_info_print_table_row(2, "Version", PHP_JWT_VERSION);
 	php_info_print_table_end();
-
-	/* Remove comments if you have entries in php.ini
-	DISPLAY_INI_ENTRIES();
-	*/
 }
-/* }}} */
 
-/* {{{ jwt_functions[]
- *
- * Every user visible function must have an entry in jwt_functions[].
- */
-const zend_function_entry jwt_functions[] = {
-	PHP_FE(confirm_jwt_compiled,	NULL)		/* For testing, remove later. */
-	PHP_FE_END	/* Must be the last line in jwt_functions[] */
-};
-/* }}} */
-
-/* {{{ jwt_module_entry
- */
 zend_module_entry jwt_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"jwt",
 	jwt_functions,
 	PHP_MINIT(jwt),
 	PHP_MSHUTDOWN(jwt),
-	PHP_RINIT(jwt),		/* Replace with NULL if there's nothing to do at request start */
-	PHP_RSHUTDOWN(jwt),	/* Replace with NULL if there's nothing to do at request end */
+	NULL,		/* Replace with NULL if there's nothing to do at request start */
+	NULL,	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(jwt),
 	PHP_JWT_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
-/* }}} */
 
 #ifdef COMPILE_DL_JWT
 #ifdef ZTS
