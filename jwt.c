@@ -108,7 +108,7 @@ static int jwt_sign(jwt_t *jwt, char **out, unsigned int *len)
 	case JWT_ALG_ES256:
 	case JWT_ALG_ES384:
 	case JWT_ALG_ES512:
-        return 0;
+        return jwt_sign_sha_pem(jwt, out, len);
 
 	/* You wut, mate? */
 	default:
@@ -134,7 +134,7 @@ static int jwt_verify(jwt_t *jwt, const char *sig)
 	case JWT_ALG_ES256:
 	case JWT_ALG_ES384:
 	case JWT_ALG_ES512:
-		return 0;
+		return jwt_verify_sha_pem(jwt, sig);
 
 	/* You wut, mate? */
 	default:
@@ -167,17 +167,10 @@ void jwt_free(jwt_t *jwt)
 	efree(jwt);
 }
 
-char *jwt_b64_url_encode(zend_string *input)
+void jwt_b64_url_encode_ex(char *str)
 {
-    char *str;
-    size_t i, t;
-
-    zend_string *b64_str = NULL;
-    b64_str = php_base64_encode((const unsigned char *)ZSTR_VAL(input), ZSTR_LEN(input));
-
-    /* replace str */
-    size_t len = ZSTR_LEN(b64_str);
-    str = ZSTR_VAL(b64_str);
+	int len = strlen(str);
+	int i, t;
 
 	for (i = t = 0; i < len; i++) {
 		switch (str[i]) {
@@ -195,11 +188,23 @@ char *jwt_b64_url_encode(zend_string *input)
 	}
 
 	str[t] = '\0';
+}
 
+char *jwt_b64_url_encode(zend_string *input)
+{
+    zend_string *b64_str = NULL;
+    b64_str = php_base64_encode((const unsigned char *)ZSTR_VAL(input), ZSTR_LEN(input));
+
+    /* replace str */
+    zend_string *new = zend_string_dup(b64_str, 0);
+
+    jwt_b64_url_encode_ex(ZSTR_VAL(new));
+
+    zend_string_free(new);
     zend_string_free(input);
     zend_string_free(b64_str);
 
-    return str;
+    return ZSTR_VAL(new);
 }
 
 zend_string *jwt_b64_url_decode(zend_string *input)
@@ -246,7 +251,7 @@ zend_string *jwt_b64_url_decode(zend_string *input)
 PHP_FUNCTION(jwt_encode)
 {
     zval *claims = NULL, header, segments, buf;
-    zend_string *key = NULL, *alg = NULL, *b64_sig = NULL, *delim = zend_string_init(".", strlen("."), 0);
+    zend_string *key = NULL, *alg = NULL, *delim = zend_string_init(".", strlen("."), 0);
     smart_str json_header = {0}, json_claims = {0};
 
     char *sig = NULL;
@@ -288,9 +293,7 @@ PHP_FUNCTION(jwt_encode)
         php_error(E_ERROR, "Signature error");
     }
     
-    b64_sig = php_base64_encode((const unsigned char *)sig, sig_len);
-
-    add_next_index_string(&segments, jwt_b64_url_encode(b64_sig));
+    add_next_index_string(&segments, jwt_b64_url_encode(zend_string_init(sig, sig_len, 0)));
     php_implode(delim, &segments, return_value);
 
     /* free */
@@ -361,6 +364,7 @@ PHP_FUNCTION(jwt_decode)
             jwt_free(jwt);
 			break;
 		}
+
         zend_string_free(vs);
     } ZEND_HASH_FOREACH_END();
 

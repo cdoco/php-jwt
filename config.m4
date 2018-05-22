@@ -5,7 +5,7 @@ PHP_ARG_ENABLE(jwt, whether to enable jwt support,
   [  --enable-jwt             Enable jwt support])
 
 PHP_ARG_WITH(openssl, whether to use OpenSSL library,
-  [  --with-openssl[=DIR]     Ignore presence of OpenSSL library], no, no)
+  [  --with-openssl[=DIR]     Ignore presence of OpenSSL library (requires OpenSSL >= 0.9.8)], no, no)
 
 if test "$PHP_OPENSSL" != "no"; then
   AC_CHECK_HEADERS([openssl/hmac.h openssl/evp.h])

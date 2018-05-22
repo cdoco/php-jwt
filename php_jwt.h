@@ -54,8 +54,15 @@ typedef struct jwt {
 	zend_string *str;
 } jwt_t;
 
+char *jwt_b64_url_encode(zend_string *input);
+void jwt_b64_url_encode_ex(char *str);
+zend_string *jwt_b64_url_decode(zend_string *input);
+
 int jwt_sign_sha_hmac(jwt_t *jwt, char **out, unsigned int *len);
 int jwt_verify_sha_hmac(jwt_t *jwt, const char *sig);
+
+int jwt_sign_sha_pem(jwt_t *jwt, char **out, unsigned int *len);
+int jwt_verify_sha_pem(jwt_t *jwt, const char *sig_b64);
 
 #if defined(ZTS) && defined(COMPILE_DL_JWT)
 ZEND_TSRMLS_CACHE_EXTERN()
