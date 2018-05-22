@@ -67,10 +67,10 @@ static int ECDSA_SIG_set0(ECDSA_SIG *sig, BIGNUM *r, BIGNUM *s)
 
 int jwt_sign_sha_hmac(jwt_t *jwt, char **out, unsigned int *len) {
 
-    const EVP_MD *alg;
+	const EVP_MD *alg;
 
 	switch (jwt->alg) {
-        /* HMAC */
+    /* HMAC */
 	case JWT_ALG_HS256:
 		alg = EVP_sha256();
 		break;
@@ -84,7 +84,7 @@ int jwt_sign_sha_hmac(jwt_t *jwt, char **out, unsigned int *len) {
 		return EINVAL;
 	}
 
-    *out = emalloc(EVP_MAX_MD_SIZE);
+	*out = emalloc(EVP_MAX_MD_SIZE);
 	if (*out == NULL) {
         return ENOMEM;
     }

@@ -35,159 +35,159 @@
 
 const char *jwt_alg_str(jwt_alg_t alg)
 {
-	switch (alg) {
-	case JWT_ALG_NONE:
-		return "none";
-	case JWT_ALG_HS256:
-		return "HS256";
-	case JWT_ALG_HS384:
-		return "HS384";
-	case JWT_ALG_HS512:
-		return "HS512";
-	case JWT_ALG_RS256:
-		return "RS256";
-	case JWT_ALG_RS384:
-		return "RS384";
-	case JWT_ALG_RS512:
-		return "RS512";
-	case JWT_ALG_ES256:
-		return "ES256";
-	case JWT_ALG_ES384:
-		return "ES384";
-	case JWT_ALG_ES512:
-		return "ES512";
-	default:
-		return NULL;
-	}
+    switch (alg) {
+    case JWT_ALG_NONE:
+        return "none";
+    case JWT_ALG_HS256:
+        return "HS256";
+    case JWT_ALG_HS384:
+        return "HS384";
+    case JWT_ALG_HS512:
+        return "HS512";
+    case JWT_ALG_RS256:
+        return "RS256";
+    case JWT_ALG_RS384:
+        return "RS384";
+    case JWT_ALG_RS512:
+        return "RS512";
+    case JWT_ALG_ES256:
+        return "ES256";
+    case JWT_ALG_ES384:
+        return "ES384";
+    case JWT_ALG_ES512:
+        return "ES512";
+    default:
+        return NULL;
+    }
 }
 
 jwt_alg_t jwt_str_alg(const char *alg)
 {
-	if (alg == NULL)
-		return JWT_ALG_INVAL;
+    if (alg == NULL)
+        return JWT_ALG_INVAL;
 
-	if (!strcasecmp(alg, "none"))
-		return JWT_ALG_NONE;
-	else if (!strcasecmp(alg, "HS256"))
-		return JWT_ALG_HS256;
-	else if (!strcasecmp(alg, "HS384"))
-		return JWT_ALG_HS384;
-	else if (!strcasecmp(alg, "HS512"))
-		return JWT_ALG_HS512;
-	else if (!strcasecmp(alg, "RS256"))
-		return JWT_ALG_RS256;
-	else if (!strcasecmp(alg, "RS384"))
-		return JWT_ALG_RS384;
-	else if (!strcasecmp(alg, "RS512"))
-		return JWT_ALG_RS512;
-	else if (!strcasecmp(alg, "ES256"))
-		return JWT_ALG_ES256;
-	else if (!strcasecmp(alg, "ES384"))
-		return JWT_ALG_ES384;
-	else if (!strcasecmp(alg, "ES512"))
-		return JWT_ALG_ES512;
+    if (!strcasecmp(alg, "none"))
+        return JWT_ALG_NONE;
+    else if (!strcasecmp(alg, "HS256"))
+        return JWT_ALG_HS256;
+    else if (!strcasecmp(alg, "HS384"))
+        return JWT_ALG_HS384;
+    else if (!strcasecmp(alg, "HS512"))
+        return JWT_ALG_HS512;
+    else if (!strcasecmp(alg, "RS256"))
+        return JWT_ALG_RS256;
+    else if (!strcasecmp(alg, "RS384"))
+        return JWT_ALG_RS384;
+    else if (!strcasecmp(alg, "RS512"))
+        return JWT_ALG_RS512;
+    else if (!strcasecmp(alg, "ES256"))
+        return JWT_ALG_ES256;
+    else if (!strcasecmp(alg, "ES384"))
+        return JWT_ALG_ES384;
+    else if (!strcasecmp(alg, "ES512"))
+        return JWT_ALG_ES512;
 
-	return JWT_ALG_INVAL;
+    return JWT_ALG_INVAL;
 }
 
 static int jwt_sign(jwt_t *jwt, char **out, unsigned int *len)
 {
-	switch (jwt->alg) {
-	/* HMAC */
-	case JWT_ALG_HS256:
-	case JWT_ALG_HS384:
-	case JWT_ALG_HS512:
+    switch (jwt->alg) {
+    /* HMAC */
+    case JWT_ALG_HS256:
+    case JWT_ALG_HS384:
+    case JWT_ALG_HS512:
         return jwt_sign_sha_hmac(jwt, out, len);
 
-	/* RSA */
-	case JWT_ALG_RS256:
-	case JWT_ALG_RS384:
-	case JWT_ALG_RS512:
+    /* RSA */
+    case JWT_ALG_RS256:
+    case JWT_ALG_RS384:
+    case JWT_ALG_RS512:
 
-	/* ECC */
-	case JWT_ALG_ES256:
-	case JWT_ALG_ES384:
-	case JWT_ALG_ES512:
+    /* ECC */
+    case JWT_ALG_ES256:
+    case JWT_ALG_ES384:
+    case JWT_ALG_ES512:
         return jwt_sign_sha_pem(jwt, out, len);
 
-	/* You wut, mate? */
-	default:
-		return EINVAL;
-	}
+    /* You wut, mate? */
+    default:
+        return EINVAL;
+    }
 }
 
 static int jwt_verify(jwt_t *jwt, const char *sig)
 {
-	switch (jwt->alg) {
-	/* HMAC */
-	case JWT_ALG_HS256:
-	case JWT_ALG_HS384:
-	case JWT_ALG_HS512:
-		return jwt_verify_sha_hmac(jwt, sig);
+    switch (jwt->alg) {
+    /* HMAC */
+    case JWT_ALG_HS256:
+    case JWT_ALG_HS384:
+    case JWT_ALG_HS512:
+        return jwt_verify_sha_hmac(jwt, sig);
 
-	/* RSA */
-	case JWT_ALG_RS256:
-	case JWT_ALG_RS384:
-	case JWT_ALG_RS512:
+    /* RSA */
+    case JWT_ALG_RS256:
+    case JWT_ALG_RS384:
+    case JWT_ALG_RS512:
 
-	/* ECC */
-	case JWT_ALG_ES256:
-	case JWT_ALG_ES384:
-	case JWT_ALG_ES512:
-		return jwt_verify_sha_pem(jwt, sig);
+    /* ECC */
+    case JWT_ALG_ES256:
+    case JWT_ALG_ES384:
+    case JWT_ALG_ES512:
+        return jwt_verify_sha_pem(jwt, sig);
 
-	/* You wut, mate? */
-	default:
-		return EINVAL;
-	}
+    /* You wut, mate? */
+    default:
+        return EINVAL;
+    }
 }
 
 int jwt_new(jwt_t **jwt)
 {
-	if (!jwt) {
+    if (!jwt) {
         return EINVAL;
     }
 
-	*jwt = emalloc(sizeof(jwt_t));
-	if (!*jwt) {
+    *jwt = emalloc(sizeof(jwt_t));
+    if (!*jwt) {
         return ENOMEM;
     }
 
-	memset(*jwt, 0, sizeof(jwt_t));
+    memset(*jwt, 0, sizeof(jwt_t));
 
-	return 0;
+    return 0;
 }
 
 void jwt_free(jwt_t *jwt)
 {
-	if (!jwt) {
+    if (!jwt) {
         return;
     }
 
-	efree(jwt);
+    efree(jwt);
 }
 
 void jwt_b64_url_encode_ex(char *str)
 {
-	int len = strlen(str);
-	int i, t;
+    int len = strlen(str);
+    int i, t;
 
-	for (i = t = 0; i < len; i++) {
-		switch (str[i]) {
-		case '+':
-			str[t++] = '-';
-			break;
-		case '/':
-			str[t++] = '_';
-			break;
-		case '=':
-			break;
-		default:
-			str[t++] = str[i];
-		}
-	}
+    for (i = t = 0; i < len; i++) {
+        switch (str[i]) {
+        case '+':
+            str[t++] = '-';
+            break;
+        case '/':
+            str[t++] = '_';
+            break;
+        case '=':
+            break;
+        default:
+            str[t++] = str[i];
+        }
+    }
 
-	str[t] = '\0';
+    str[t] = '\0';
 }
 
 char *jwt_b64_url_encode(zend_string *input)
@@ -210,35 +210,35 @@ char *jwt_b64_url_encode(zend_string *input)
 zend_string *jwt_b64_url_decode(zend_string *input)
 {
     zend_string *rs = NULL;
-	char *new, *src = ZSTR_VAL(input);
-	int len, i, z;
+    char *new, *src = ZSTR_VAL(input);
+    int len, i, z;
 
-	/* Decode based on RFC-4648 URI safe encoding. */
-	len = ZSTR_LEN(input);
-	new = alloca(len + 4);
-	if (!new) {
+    /* Decode based on RFC-4648 URI safe encoding. */
+    len = ZSTR_LEN(input);
+    new = alloca(len + 4);
+    if (!new) {
         return NULL;
     }
 
-	for (i = 0; i < len; i++) {
-		switch (src[i]) {
-		case '-':
-			new[i] = '+';
-			break;
-		case '_':
-			new[i] = '/';
-			break;
-		default:
-			new[i] = src[i];
-		}
-	}
-	z = 4 - (i % 4);
-	if (z < 4) {
-		while (z--) {
+    for (i = 0; i < len; i++) {
+        switch (src[i]) {
+        case '-':
+            new[i] = '+';
+            break;
+        case '_':
+            new[i] = '/';
+            break;
+        default:
+            new[i] = src[i];
+        }
+    }
+    z = 4 - (i % 4);
+    if (z < 4) {
+        while (z--) {
             new[i++] = '=';
         }	
-	}
-	new[i] = '\0';
+    }
+    new[i] = '\0';
 
     /* base64 decode */
     rs = php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
@@ -327,7 +327,7 @@ PHP_FUNCTION(jwt_decode)
         zend_string *vs = jwt_b64_url_decode(Z_STR_P(value));
 
         switch (i) {
-		case 0:
+        case 0:
             smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
             smart_str_appends(&segments, ".");
 
@@ -342,7 +342,7 @@ PHP_FUNCTION(jwt_decode)
 
             zend_string_free(alg_str);
 			break;
-		case 1:
+        case 1:
             smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
             php_json_decode_ex(&claims, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
 			break;
@@ -362,8 +362,8 @@ PHP_FUNCTION(jwt_decode)
             }
 
             jwt_free(jwt);
-			break;
-		}
+            break;
+        }
 
         zend_string_free(vs);
     } ZEND_HASH_FOREACH_END();
@@ -384,33 +384,33 @@ const zend_function_entry jwt_functions[] = {
 
 PHP_MINIT_FUNCTION(jwt)
 {
-	return SUCCESS;
+    return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
-	return SUCCESS;
+    return SUCCESS;
 }
 
 PHP_MINFO_FUNCTION(jwt)
 {
-	php_info_print_table_start();
-	php_info_print_table_header(2, "jwt support", "enabled");
+    php_info_print_table_start();
+    php_info_print_table_header(2, "jwt support", "enabled");
     php_info_print_table_row(2, "Version", PHP_JWT_VERSION);
-	php_info_print_table_end();
+    php_info_print_table_end();
 }
 
 zend_module_entry jwt_module_entry = {
-	STANDARD_MODULE_HEADER,
-	"jwt",
-	jwt_functions,
-	PHP_MINIT(jwt),
-	PHP_MSHUTDOWN(jwt),
-	NULL,		/* Replace with NULL if there's nothing to do at request start */
-	NULL,	/* Replace with NULL if there's nothing to do at request end */
-	PHP_MINFO(jwt),
-	PHP_JWT_VERSION,
-	STANDARD_MODULE_PROPERTIES
+    STANDARD_MODULE_HEADER,
+    "jwt",
+    jwt_functions,
+    PHP_MINIT(jwt),
+    PHP_MSHUTDOWN(jwt),
+    NULL,		/* Replace with NULL if there's nothing to do at request start */
+    NULL,	/* Replace with NULL if there's nothing to do at request end */
+    PHP_MINFO(jwt),
+    PHP_JWT_VERSION,
+    STANDARD_MODULE_PROPERTIES
 };
 
 #ifdef COMPILE_DL_JWT
