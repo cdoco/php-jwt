@@ -23,9 +23,9 @@ else
     elif test -f $i/ssl/include/openssl/hmac.h; then
       OPENSSL_LIB=$i/ssl/lib
       OPENSSL_INC=$i/ssl/include
-    elif test -f /usr/include/openssl/hmac.h; then
-      OPENSSL_LIB=/usr/lib64
-      OPENSSL_INC=/usr/include
+    elif test -f $i/include/openssl/hmac.h; then
+      OPENSSL_LIB=$i/lib64
+      OPENSSL_INC=$i/include
     fi
   done
 
