@@ -52,7 +52,7 @@ print_r(jwt_decode($token, $key));
 //)
 ```
 
-## Other
+## Methods
 
 ```php
 //encode
