@@ -48,9 +48,9 @@ $token = jwt_encode([
     "sub" => "1234567890",
     "name" => "ZiHang Gao",
     "admin" => true
-], $privateKey, 'RS256');
+], $privateKey, 'RS512');
 
-$jwt = jwt_decode($token, $publicKey, 'RS256');
+$jwt = jwt_decode($token, $publicKey, 'RS512');
 
 var_dump($token);
 var_dump($jwt);

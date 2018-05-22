@@ -27,7 +27,9 @@ $claims = array(
 );
 
 jwt_encode($claims, $key, 'HS256');
-//eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.//eyJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAiLCJuYW1lIjoiWmlIYW5nIEdhbyIsImFkbWluIjp0cnVlfQ.//2lFeBTsRegsjXiBCZNkW41KFlsZPSFu7KTsyAM9lUiQ
+//eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.
+//eyJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAiLCJuYW1lIjoiWmlIYW5nIEdhbyIsImFkbWluIjp0cnVlfQ.
+//2lFeBTsRegsjXiBCZNkW41KFlsZPSFu7KTsyAM9lUiQ
 
 jwt_decode($jwt, $key, 'HS256');
 //array(4) {
