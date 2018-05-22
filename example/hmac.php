@@ -1,9 +1,4 @@
 <?php
-$br = (php_sapi_name() == "cli")? "":"<br>";
-
-if(!extension_loaded('jwt')) {
-	dl('jwt.' . PHP_SHLIB_SUFFIX);
-}
 
 $key = "example_key";
 $claims = array(

@@ -376,8 +376,6 @@ int jwt_verify_sha_pem(jwt_t *jwt, const char *sig_b64)
 	if (sig == NULL)
 		VERIFY_ERROR(EINVAL);
 
-    zend_string_free(sig_str);
-
 	bufkey = BIO_new_mem_buf(ZSTR_VAL(jwt->key), ZSTR_LEN(jwt->key));
 	if (bufkey == NULL)
 		VERIFY_ERROR(ENOMEM);
@@ -422,7 +420,7 @@ int jwt_verify_sha_pem(jwt_t *jwt, const char *sig_b64)
 			VERIFY_ERROR(EINVAL);
 
 		ECDSA_SIG_set0(ec_sig, ec_sig_r, ec_sig_s);
-		free(sig);
+		efree(sig);
 
 		slen = i2d_ECDSA_SIG(ec_sig, NULL);
 		sig = emalloc(slen);
@@ -464,6 +462,8 @@ jwt_verify_sha_pem_done:
 		efree(sig);
 	if (ec_sig)
 		ECDSA_SIG_free(ec_sig);
+
+	zend_string_free(sig_str);
 
 	return ret;
 }

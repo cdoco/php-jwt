@@ -296,7 +296,7 @@ PHP_FUNCTION(jwt_encode)
     /* sign */
     if (jwt_sign(jwt, &sig, &sig_len)) {
         efree(sig);
-        zend_throw_exception(zend_exception_get_default(), "Signature error", 0);
+        zend_throw_exception(zend_ce_exception, "Signature error", 0);
     }
     
     add_next_index_string(&segments, jwt_b64_url_encode(zend_string_init(sig, sig_len, 0)));
@@ -349,7 +349,7 @@ PHP_FUNCTION(jwt_decode)
             zval *zalg = zend_hash_find(Z_ARRVAL(header), alg_str);
             
             if (!zend_string_equals(Z_STR_P(zalg), alg)) {
-                zend_throw_exception(zend_exception_get_default(), "Algorithm not allowed", 0);
+                zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
             }
 
             zend_string_free(alg_str);
@@ -370,7 +370,7 @@ PHP_FUNCTION(jwt_decode)
             jwt->str = segments.s;
 
             if (jwt_verify(jwt, Z_STRVAL_P(value))) {
-                zend_throw_exception(zend_exception_get_default(), "Signature verification failed", 0);
+                zend_throw_exception(zend_ce_exception, "Signature verification failed", 0);
             }
 
             jwt_free(jwt);
@@ -379,7 +379,7 @@ PHP_FUNCTION(jwt_decode)
 
         zend_string_free(vs);
     } ZEND_HASH_FOREACH_END();
-
+    
     /* free */
     zend_string_free(alg);
     zend_string_free(delim);
