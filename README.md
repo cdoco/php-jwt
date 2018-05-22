@@ -52,6 +52,8 @@ print_r(jwt_decode($token, $key));
 //)
 ```
 
+## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
+
 ## Methods
 
 ```php
@@ -69,6 +71,10 @@ algorithm|-|-|-
 HMAC|HS256|HS384|HS512
 RSA|RS256|RS384|RS512
 ECDSA|ES256|ES384|ES512
+
+## License
+
+PHP License. See the [LICENSE](LICENSE) file.
 
 [travis-url]: https://travis-ci.org/cdoco/php-jwt
 [travis-image]: https://travis-ci.org/cdoco/php-jwt.svg
