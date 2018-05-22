@@ -13,7 +13,6 @@ sudo: enabled
 #Compile
 before_script:
     - openssl version -a
-    - sudo apt-get update libssl-dev
     - ./travis/compile.sh
 
 # Run PHPs run-tests.php 
