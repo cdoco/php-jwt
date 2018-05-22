@@ -44,13 +44,15 @@ $token = jwt_encode($claims, $key, 'HS256');
 $jwt = jwt_decode($token, $key, 'HS256');
 
 $token = jwt_encode([
+    "data" => [
+        "name" => "ZiHang Gao",
+        "admin" => true
+    ],
 	"iss" => "http://example.org",
     "sub" => "1234567890",
-    "name" => "ZiHang Gao",
-    "admin" => true
-], $privateKey, 'RS512');
+], $publicKey);
 
-$jwt = jwt_decode($token, $publicKey, 'RS512');
+$jwt = jwt_decode($token . 'aaaaa', $publicKey);
 
 var_dump($token);
 var_dump($jwt);

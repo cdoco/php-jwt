@@ -26,12 +26,12 @@ $claims = array(
     "admin" => true
 );
 
-jwt_encode($claims, $key, 'HS256');
+jwt_encode($claims, $key);
 //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.
 //eyJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAiLCJuYW1lIjoiWmlIYW5nIEdhbyIsImFkbWluIjp0cnVlfQ.
 //2lFeBTsRegsjXiBCZNkW41KFlsZPSFu7KTsyAM9lUiQ
 
-jwt_decode($jwt, $key, 'HS256');
+jwt_decode($jwt, $key);
 //array(4) {
 //  'iss' =>
 //  string(18) "http://example.org"
@@ -80,7 +80,7 @@ $jwt = jwt_encode([
     "sub" => "1234567890",
     "name" => "ZiHang Gao",
     "admin" => true
-], $privateKey, 'RS256');
+], $privateKey, 'RS512');
 
-jwt_decode($jwt, $publicKey, 'RS256');
+jwt_decode($jwt, $publicKey, 'RS512');
 ```
