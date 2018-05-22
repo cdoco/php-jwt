@@ -39,17 +39,19 @@ echo $token . PHP_EOL;
 //2lFeBTsRegsjXiBCZNkW41KFlsZPSFu7KTsyAM9lUiQ
 
 print_r(jwt_decode($token, $key));
-//Array
-//(
-//    [data] => Array
-//        (
-//            [name] => ZiHang Gao
-//            [admin] => 1
-//        )
-//
-//    [iss] => http://example.org
-//    [sub] => 1234567890
-//)
+/**
+Array
+(
+    [data] => Array
+        (
+            [name] => ZiHang Gao
+            [admin] => 1
+        )
+
+    [iss] => http://example.org
+    [sub] => 1234567890
+)
+*/
 ```
 
 ## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
