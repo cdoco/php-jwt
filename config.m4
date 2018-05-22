@@ -20,6 +20,9 @@ else
     if test -f $i/openssl/include/openssl/hmac.h; then
       OPENSSL_LIB=$i/openssl/lib
       OPENSSL_INC=$i/openssl/include
+    elif test -f $i/ssl/include/openssl/hmac.h; then
+      OPENSSL_LIB=$i/ssl/lib
+      OPENSSL_INC=$i/ssl/include
     fi
   done
 
