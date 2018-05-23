@@ -24,7 +24,7 @@
 extern zend_module_entry jwt_module_entry;
 #define phpext_jwt_ptr &jwt_module_entry
 
-#define PHP_JWT_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_JWT_VERSION "0.1.1" /* Replace with version number for your extension */
 
 #ifdef ZTS
 #include "TSRM.h"
