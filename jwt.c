@@ -34,6 +34,9 @@
 
 #include "php_jwt.h"
 
+/* default */
+zend_string *delim = NULL, *default_alg = NULL;
+
 const char *jwt_alg_str(jwt_alg_t alg)
 {
     switch (alg) {
@@ -249,22 +252,6 @@ zend_string *jwt_b64_url_decode(zend_string *input)
     return rs;
 }
 
-void jwt_implode(zval *arr, zval *return_value)
-{
-    zend_string *delim = zend_string_init(".", strlen("."), 0);
-
-    php_implode(delim, arr, return_value);
-    zend_string_free(delim);
-}
-
-void jwt_explode(zend_string *str, zval *return_value)
-{
-    zend_string *delim = zend_string_init(".", strlen("."), 0);
-
-    php_explode(delim, str, return_value, 3);
-    zend_string_free(delim);
-}
-
 PHP_FUNCTION(jwt_encode)
 {
     zval *claims = NULL, header, segments, buf;
@@ -280,7 +267,7 @@ PHP_FUNCTION(jwt_encode)
 
     /* not set algorithm */
     if (alg == NULL) {
-        alg = zend_string_init("HS256", strlen("HS256"), 0);
+        alg = default_alg;
     }
 
     /* init */
@@ -299,7 +286,7 @@ PHP_FUNCTION(jwt_encode)
     add_next_index_string(&segments, jwt_b64_url_encode(json_header.s));
     add_next_index_string(&segments, jwt_b64_url_encode(json_claims.s));
     
-    jwt_implode(&segments, &buf);
+    php_implode(delim, &segments, &buf);
 
     /* set jwt struct */
     jwt_t *jwt = NULL;
@@ -316,7 +303,7 @@ PHP_FUNCTION(jwt_encode)
     }
     
     add_next_index_string(&segments, jwt_b64_url_encode(zend_string_init(sig, sig_len, 0)));
-    jwt_implode(&segments, return_value);
+    php_implode(delim, &segments, return_value);
 
     /* free */
     efree(sig);
@@ -324,7 +311,6 @@ PHP_FUNCTION(jwt_encode)
     zval_ptr_dtor(&buf);
     zval_ptr_dtor(&header);
     zval_ptr_dtor(&segments);
-    zend_string_free(alg);
 }
 
 PHP_FUNCTION(jwt_decode)
@@ -341,14 +327,14 @@ PHP_FUNCTION(jwt_decode)
 
     /* not set algorithm */
     if (alg == NULL) {
-        alg = zend_string_init("HS256", strlen("HS256"), 0);
+        alg = default_alg;
     }
 
     /* init */
     array_init(&jwt_arr);
 
     /* get header and claims */
-    jwt_explode(jwt, &jwt_arr);
+    php_explode(delim, jwt, &jwt_arr, 3);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL(jwt_arr), i, value) {
         zend_string *vs = jwt_b64_url_decode(Z_STR_P(value));
@@ -394,7 +380,6 @@ PHP_FUNCTION(jwt_decode)
     } ZEND_HASH_FOREACH_END();
     
     /* free */
-    zend_string_free(alg);
     zval_ptr_dtor(&jwt_arr);
     smart_str_free(&segments);
 
@@ -409,11 +394,17 @@ const zend_function_entry jwt_functions[] = {
 
 PHP_MINIT_FUNCTION(jwt)
 {
+    /* set the default */
+    delim = zend_string_init(".", 1, 1);
+    default_alg = zend_string_init("HS256", 5, 1);
+
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
+    zend_string_free(delim);
+    zend_string_free(default_alg);
     return SUCCESS;
 }
 
