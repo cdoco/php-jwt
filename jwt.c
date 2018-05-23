@@ -308,23 +308,23 @@ PHP_FUNCTION(jwt_decode)
     char *head = estrdup(ZSTR_VAL(token));
 
     /* Find the components. */
-	for (body = head; body[0] != '.'; body++) {
-		if (body[0] == '\0') {
+    for (body = head; body[0] != '.'; body++) {
+        if (body[0] == '\0') {
             goto decode_done;
         }	
-	}
+    }
 
-	body[0] = '\0';
-	body++;
+    body[0] = '\0';
+    body++;
 
-	for (sig = body; sig[0] != '.'; sig++) {
-		if (sig[0] == '\0') {
+    for (sig = body; sig[0] != '.'; sig++) {
+        if (sig[0] == '\0') {
             goto decode_done;
         }
-	}
+    }
 
-	sig[0] = '\0';
-	sig++;
+    sig[0] = '\0';
+    sig++;
 
     /* verify head */
     zval zv;
@@ -359,7 +359,7 @@ PHP_FUNCTION(jwt_decode)
     }
 
 decode_done:
-	efree(head);
+    efree(head);
     jwt_free(jwt);
     zval_ptr_dtor(&zv);
     zend_string_free(json_h);
