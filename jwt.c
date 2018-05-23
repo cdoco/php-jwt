@@ -184,6 +184,7 @@ char *jwt_b64_url_encode(zend_string *input)
 
 zend_string *jwt_b64_url_decode(const char *src)
 {
+    zend_string *result;
     char *new;
     int len, i, z;
 
@@ -215,8 +216,22 @@ zend_string *jwt_b64_url_decode(const char *src)
     new[i] = '\0';
 
     /* base64 decode */
-    return php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
+    result = php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
+    if (result == NULL) {
+        zend_throw_exception(zend_ce_exception, "Base64 decode error", 0);
+    }
+
+    return result;
 }
+
+void jwt_parse_body(char *body, zval *return_value)
+{
+    zend_string *vs = jwt_b64_url_decode(body);
+    php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
+
+    zend_string_free(vs);
+}
+
 
 PHP_FUNCTION(jwt_encode)
 {
@@ -283,14 +298,6 @@ PHP_FUNCTION(jwt_encode)
     RETURN_STR(segments.s);
 }
 
-void jwt_parse_body(char *body, zval *return_value)
-{
-    zend_string *vs = jwt_b64_url_decode(body);
-    php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
-
-    zend_string_free(vs);
-}
-
 PHP_FUNCTION(jwt_decode)
 {
     zend_string *token = NULL, *key = NULL;
@@ -336,12 +343,16 @@ PHP_FUNCTION(jwt_decode)
 
     php_json_decode_ex(&zv, ZSTR_VAL(json_h), ZSTR_LEN(json_h), PHP_JSON_OBJECT_AS_ARRAY, 512);
 
-    zval *zalg = zend_hash_str_find(Z_ARRVAL(zv), "alg", strlen("alg"));
+    if (Z_TYPE(zv) == IS_ARRAY) {
+        zval *zalg = zend_hash_str_find(Z_ARRVAL(zv), "alg", strlen("alg"));
 
-    if (strcmp(Z_STRVAL_P(zalg), alg)) {
-        zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
+        if (strcmp(Z_STRVAL_P(zalg), alg)) {
+            zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
+        }
+    } else {
+        zend_throw_exception(zend_ce_exception, "Json decode error", 0);
     }
-    
+
     /* parse body */
     jwt_parse_body(body, return_value);
 
