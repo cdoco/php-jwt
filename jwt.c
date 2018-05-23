@@ -249,10 +249,26 @@ zend_string *jwt_b64_url_decode(zend_string *input)
     return rs;
 }
 
+void jwt_implode(zval *arr, zval *return_value)
+{
+    zend_string *delim = zend_string_init(".", strlen("."), 0);
+
+    php_implode(delim, arr, return_value);
+    zend_string_free(delim);
+}
+
+void jwt_explode(zend_string *str, zval *return_value)
+{
+    zend_string *delim = zend_string_init(".", strlen("."), 0);
+
+    php_explode(delim, str, return_value, 3);
+    zend_string_free(delim);
+}
+
 PHP_FUNCTION(jwt_encode)
 {
     zval *claims = NULL, header, segments, buf;
-    zend_string *key = NULL, *alg = NULL, *delim = zend_string_init(".", strlen("."), 0);
+    zend_string *key = NULL, *alg = NULL;
     smart_str json_header = {0}, json_claims = {0};
 
     char *sig = NULL;
@@ -283,7 +299,7 @@ PHP_FUNCTION(jwt_encode)
     add_next_index_string(&segments, jwt_b64_url_encode(json_header.s));
     add_next_index_string(&segments, jwt_b64_url_encode(json_claims.s));
     
-    php_implode(delim, &segments, &buf);
+    jwt_implode(&segments, &buf);
 
     /* set jwt struct */
     jwt_t *jwt = NULL;
@@ -300,7 +316,7 @@ PHP_FUNCTION(jwt_encode)
     }
     
     add_next_index_string(&segments, jwt_b64_url_encode(zend_string_init(sig, sig_len, 0)));
-    php_implode(delim, &segments, return_value);
+    jwt_implode(&segments, return_value);
 
     /* free */
     efree(sig);
@@ -309,13 +325,12 @@ PHP_FUNCTION(jwt_encode)
     zval_ptr_dtor(&header);
     zval_ptr_dtor(&segments);
     zend_string_free(alg);
-    zend_string_free(delim);
 }
 
 PHP_FUNCTION(jwt_decode)
 {
     zval jwt_arr, header, claims, *value = NULL;
-    zend_string *jwt = NULL, *key = NULL, *alg = NULL, *delim = zend_string_init(".", strlen("."), 0);
+    zend_string *jwt = NULL, *key = NULL, *alg = NULL;
 
     zend_ulong i;
     smart_str segments = {0};
@@ -333,7 +348,7 @@ PHP_FUNCTION(jwt_decode)
     array_init(&jwt_arr);
 
     /* get header and claims */
-    php_explode(delim, jwt, &jwt_arr, 3);
+    jwt_explode(jwt, &jwt_arr);
 
     ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL(jwt_arr), i, value) {
         zend_string *vs = jwt_b64_url_decode(Z_STR_P(value));
@@ -345,14 +360,12 @@ PHP_FUNCTION(jwt_decode)
 
             php_json_decode_ex(&header, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
 
-            zend_string *alg_str = zend_string_init("alg", strlen("alg"), 0);
-            zval *zalg = zend_hash_find(Z_ARRVAL(header), alg_str);
+            zval *zalg = zend_hash_str_find(Z_ARRVAL(header), "alg", strlen("alg"));
             
             if (!zend_string_equals(Z_STR_P(zalg), alg)) {
                 zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
             }
 
-            zend_string_free(alg_str);
             break;
         case 1:
             smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
@@ -382,7 +395,6 @@ PHP_FUNCTION(jwt_decode)
     
     /* free */
     zend_string_free(alg);
-    zend_string_free(delim);
     zval_ptr_dtor(&jwt_arr);
     smart_str_free(&segments);
 
