@@ -368,7 +368,7 @@ int jwt_verify_sha_pem(jwt_t *jwt, const char *sig_b64)
 		return EINVAL;
 	}
 
-    zend_string *sig_str = jwt_b64_url_decode(zend_string_init(sig_b64, strlen(sig_b64), 0));
+    zend_string *sig_str = jwt_b64_url_decode(sig_b64);
 
     sig = (unsigned char *)ZSTR_VAL(sig_str);
     slen = ZSTR_LEN(sig_str);

@@ -56,7 +56,7 @@ typedef struct jwt {
 
 char *jwt_b64_url_encode(zend_string *input);
 void jwt_b64_url_encode_ex(char *str);
-zend_string *jwt_b64_url_decode(zend_string *input);
+zend_string *jwt_b64_url_decode(const char *src);
 
 int jwt_sign_sha_hmac(jwt_t *jwt, char **out, unsigned int *len);
 int jwt_verify_sha_hmac(jwt_t *jwt, const char *sig);

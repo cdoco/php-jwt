@@ -34,37 +34,7 @@
 
 #include "php_jwt.h"
 
-/* default */
-zend_string *delim = NULL, *default_alg = NULL;
-
-const char *jwt_alg_str(jwt_alg_t alg)
-{
-    switch (alg) {
-    case JWT_ALG_NONE:
-        return "none";
-    case JWT_ALG_HS256:
-        return "HS256";
-    case JWT_ALG_HS384:
-        return "HS384";
-    case JWT_ALG_HS512:
-        return "HS512";
-    case JWT_ALG_RS256:
-        return "RS256";
-    case JWT_ALG_RS384:
-        return "RS384";
-    case JWT_ALG_RS512:
-        return "RS512";
-    case JWT_ALG_ES256:
-        return "ES256";
-    case JWT_ALG_ES384:
-        return "ES384";
-    case JWT_ALG_ES512:
-        return "ES512";
-    default:
-        return NULL;
-    }
-}
-
+/* string to algorithm */
 jwt_alg_t jwt_str_alg(const char *alg)
 {
     if (alg == NULL)
@@ -94,6 +64,7 @@ jwt_alg_t jwt_str_alg(const char *alg)
     return JWT_ALG_INVAL;
 }
 
+/* jwt sign */
 static int jwt_sign(jwt_t *jwt, char **out, unsigned int *len)
 {
     switch (jwt->alg) {
@@ -120,6 +91,7 @@ static int jwt_sign(jwt_t *jwt, char **out, unsigned int *len)
     }
 }
 
+/* jwt verify */
 static int jwt_verify(jwt_t *jwt, const char *sig)
 {
     switch (jwt->alg) {
@@ -205,20 +177,18 @@ char *jwt_b64_url_encode(zend_string *input)
     jwt_b64_url_encode_ex(ZSTR_VAL(new));
 
     zend_string_free(new);
-    zend_string_free(input);
     zend_string_free(b64_str);
 
     return ZSTR_VAL(new);
 }
 
-zend_string *jwt_b64_url_decode(zend_string *input)
+zend_string *jwt_b64_url_decode(const char *src)
 {
-    zend_string *rs = NULL;
-    char *new, *src = ZSTR_VAL(input);
+    char *new;
     int len, i, z;
 
     /* Decode based on RFC-4648 URI safe encoding. */
-    len = ZSTR_LEN(input);
+    len = strlen(src);
     new = alloca(len + 4);
     if (!new) {
         return NULL;
@@ -245,145 +215,155 @@ zend_string *jwt_b64_url_decode(zend_string *input)
     new[i] = '\0';
 
     /* base64 decode */
-    rs = php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
-
-    zend_string_free(input);
-
-    return rs;
+    return php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
 }
 
 PHP_FUNCTION(jwt_encode)
 {
-    zval *claims = NULL, header, segments, buf;
-    zend_string *key = NULL, *alg = NULL;
-    smart_str json_header = {0}, json_claims = {0};
+    zval *claims = NULL, header;
+    zend_string *key = NULL;
+    smart_str json_header = {0}, json_claims = {0}, segments = {0};
 
-    char *sig = NULL;
+    char *sig = NULL, *alg = NULL;
     unsigned int sig_len;
+    size_t alg_len;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "aS|S", &claims, &key, &alg) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "aS|s", &claims, &key, &alg, &alg_len) == FAILURE) {
         return;
     }
 
     /* not set algorithm */
-    if (alg == NULL) {
-        alg = default_alg;
-    }
+    alg = (alg == NULL) ? "HS256" : alg;
 
     /* init */
-    array_init(&segments);
     array_init(&header);
 
     /* JWT header array */
     add_assoc_string(&header, "typ", "JWT");
-    add_assoc_string(&header, "alg", ZSTR_VAL(alg));
+    add_assoc_string(&header, "alg", alg);
 
     /* json encode */
     php_json_encode(&json_header, &header, 0);
     php_json_encode(&json_claims, claims, 0);
 
     /* base64 encode */
-    add_next_index_string(&segments, jwt_b64_url_encode(json_header.s));
-    add_next_index_string(&segments, jwt_b64_url_encode(json_claims.s));
-    
-    php_implode(delim, &segments, &buf);
+    smart_str_appends(&segments, jwt_b64_url_encode(json_header.s));
+    smart_str_appends(&segments, ".");
+    smart_str_appends(&segments, jwt_b64_url_encode(json_claims.s));
 
     /* set jwt struct */
     jwt_t *jwt = NULL;
 
     jwt_new(&jwt);
-    jwt->alg = jwt_str_alg(ZSTR_VAL(alg));
+    jwt->alg = jwt_str_alg(alg);
     jwt->key = key;
-    jwt->str = Z_STR(buf);
+    jwt->str = segments.s;
 
     /* sign */
     if (jwt_sign(jwt, &sig, &sig_len)) {
         efree(sig);
         zend_throw_exception(zend_ce_exception, "Signature error", 0);
     }
-    
-    add_next_index_string(&segments, jwt_b64_url_encode(zend_string_init(sig, sig_len, 0)));
-    php_implode(delim, &segments, return_value);
+
+    smart_str_appends(&segments, ".");
+
+    zend_string *sig_str = zend_string_init(sig, sig_len, 0);
+
+    smart_str_appends(&segments, jwt_b64_url_encode(sig_str));
+    smart_str_0(&segments);
 
     /* free */
     efree(sig);
     jwt_free(jwt);
-    zval_ptr_dtor(&buf);
     zval_ptr_dtor(&header);
-    zval_ptr_dtor(&segments);
+    smart_str_free(&json_header);
+    smart_str_free(&json_claims);
+    zend_string_free(sig_str);
+    
+    RETURN_STR(segments.s);
+}
+
+void jwt_parse_body(char *body, zval *return_value)
+{
+    zend_string *vs = jwt_b64_url_decode(body);
+    php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
+
+    zend_string_free(vs);
 }
 
 PHP_FUNCTION(jwt_decode)
 {
-    zval jwt_arr, header, claims, *value = NULL;
-    zend_string *jwt = NULL, *key = NULL, *alg = NULL;
-
-    zend_ulong i;
+    zend_string *token = NULL, *key = NULL;
     smart_str segments = {0};
+    char *alg = NULL, *body = NULL, *sig = NULL;
+    size_t alg_len;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "SS|S", &jwt, &key, &alg) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "SS|s", &token, &key, &alg, &alg_len) == FAILURE) {
         return;
     }
 
     /* not set algorithm */
-    if (alg == NULL) {
-        alg = default_alg;
+    alg = (alg == NULL) ? "HS256" : alg;
+
+    char *head = estrdup(ZSTR_VAL(token));
+
+    /* Find the components. */
+	for (body = head; body[0] != '.'; body++) {
+		if (body[0] == '\0') {
+            goto decode_done;
+        }	
+	}
+
+	body[0] = '\0';
+	body++;
+
+	for (sig = body; sig[0] != '.'; sig++) {
+		if (sig[0] == '\0') {
+            goto decode_done;
+        }
+	}
+
+	sig[0] = '\0';
+	sig++;
+
+    /* verify head */
+    zval zv;
+    zend_string *json_h = jwt_b64_url_decode(head);
+
+    php_json_decode_ex(&zv, ZSTR_VAL(json_h), ZSTR_LEN(json_h), PHP_JSON_OBJECT_AS_ARRAY, 512);
+
+    zval *zalg = zend_hash_str_find(Z_ARRVAL(zv), "alg", strlen("alg"));
+
+    if (strcmp(Z_STRVAL_P(zalg), alg)) {
+        zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
+    }
+    
+    /* parse body */
+    jwt_parse_body(body, return_value);
+
+    /* set jwt struct */
+    jwt_t *jwt = NULL;
+
+    jwt_new(&jwt);
+    jwt->alg = jwt_str_alg(alg);
+    jwt->key = key;
+
+    smart_str_appends(&segments, head);
+    smart_str_appends(&segments, ".");
+    smart_str_appends(&segments, body);
+
+    jwt->str = segments.s;
+
+    if (jwt_verify(jwt, sig)) {
+        zend_throw_exception(zend_ce_exception, "Signature verification failed", 0);
     }
 
-    /* init */
-    array_init(&jwt_arr);
-
-    /* get header and claims */
-    php_explode(delim, jwt, &jwt_arr, 3);
-
-    ZEND_HASH_FOREACH_NUM_KEY_VAL(Z_ARRVAL(jwt_arr), i, value) {
-        zend_string *vs = jwt_b64_url_decode(Z_STR_P(value));
-
-        switch (i) {
-        case 0:
-            smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
-            smart_str_appends(&segments, ".");
-
-            php_json_decode_ex(&header, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
-
-            zval *zalg = zend_hash_str_find(Z_ARRVAL(header), "alg", strlen("alg"));
-            
-            if (!zend_string_equals(Z_STR_P(zalg), alg)) {
-                zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
-            }
-
-            break;
-        case 1:
-            smart_str_appendl(&segments, Z_STRVAL_P(value), Z_STRLEN_P(value));
-            php_json_decode_ex(&claims, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
-            break;
-        case 2:
-            smart_str_0(&segments);
-
-            /* set jwt struct */
-            jwt_t *jwt = NULL;
-
-            jwt_new(&jwt);
-            jwt->alg = jwt_str_alg(ZSTR_VAL(alg));
-            jwt->key = key;
-            jwt->str = segments.s;
-
-            if (jwt_verify(jwt, Z_STRVAL_P(value))) {
-                zend_throw_exception(zend_ce_exception, "Signature verification failed", 0);
-            }
-
-            jwt_free(jwt);
-            break;
-        }
-
-        zend_string_free(vs);
-    } ZEND_HASH_FOREACH_END();
-    
-    /* free */
-    zval_ptr_dtor(&jwt_arr);
+decode_done:
+	efree(head);
+    jwt_free(jwt);
+    zval_ptr_dtor(&zv);
+    zend_string_free(json_h);
     smart_str_free(&segments);
-
-    RETURN_ZVAL(&claims, 0, 1);
 }
 
 const zend_function_entry jwt_functions[] = {
@@ -394,17 +374,11 @@ const zend_function_entry jwt_functions[] = {
 
 PHP_MINIT_FUNCTION(jwt)
 {
-    /* set the default */
-    delim = zend_string_init(".", 1, 1);
-    default_alg = zend_string_init("HS256", 5, 1);
-
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
-    zend_string_free(delim);
-    zend_string_free(default_alg);
     return SUCCESS;
 }
 
