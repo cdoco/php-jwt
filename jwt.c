@@ -245,13 +245,25 @@ PHP_FUNCTION(jwt_encode)
     char *sig = NULL, *alg = NULL;
     unsigned int sig_len;
     size_t alg_len;
+    jwt_t *jwt = NULL;
     
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "aS|s", &claims, &key, &alg, &alg_len) == FAILURE) {
         return;
     }
 
+    /* init jwt */
+    jwt_new(&jwt);
+
     /* not set algorithm */
     alg = (alg == NULL) ? "HS256" : alg;
+
+    /* check algorithm */
+    jwt->alg = jwt_str_alg(alg);
+
+    if (jwt->alg == JWT_ALG_INVAL) {
+        zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
+        RETURN_FALSE;
+    }
 
     /* init */
     array_init(&header);
@@ -270,17 +282,13 @@ PHP_FUNCTION(jwt_encode)
     smart_str_appends(&segments, jwt_b64_url_encode(json_claims.s));
 
     /* set jwt struct */
-    jwt_t *jwt = NULL;
-
-    jwt_new(&jwt);
-    jwt->alg = jwt_str_alg(alg);
     jwt->key = key;
     jwt->str = segments.s;
 
     /* sign */
     if (jwt_sign(jwt, &sig, &sig_len)) {
-        efree(sig);
         zend_throw_exception(zend_ce_exception, "Signature error", 0);
+        RETURN_FALSE;
     }
 
     smart_str_appends(&segments, ".");
@@ -321,6 +329,14 @@ PHP_FUNCTION(jwt_decode)
     /* jwt init */
     jwt_new(&jwt);
 
+    /* check algorithm */
+    jwt->alg = jwt_str_alg(alg);
+
+    if (jwt->alg == JWT_ALG_INVAL) {
+        zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
+        RETURN_FALSE;
+    }
+
     /* Find the components. */
     for (body = head; body[0] != '.'; body++) {
         if (body[0] == '\0') {
@@ -351,16 +367,17 @@ PHP_FUNCTION(jwt_decode)
 
         if (strcmp(Z_STRVAL_P(zalg), alg)) {
             zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
+            RETURN_FALSE;
         }
     } else {
         zend_throw_exception(zend_ce_exception, "Json decode error", 0);
+        RETURN_FALSE;
     }
 
     /* parse body */
     jwt_parse_body(body, return_value);
 
     /* set jwt struct */
-    jwt->alg = jwt_str_alg(alg);
     jwt->key = key;
 
     smart_str_appends(&segments, head);
@@ -371,6 +388,7 @@ PHP_FUNCTION(jwt_decode)
 
     if (jwt_verify(jwt, sig)) {
         zend_throw_exception(zend_ce_exception, "Signature verification failed", 0);
+        RETURN_FALSE;
     }
 
     zval_ptr_dtor(&zv);
