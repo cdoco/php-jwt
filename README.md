@@ -1,6 +1,7 @@
 # php-jwt
 
 [![Build Status][travis-image]][travis-url]
+![Branch master](https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square)
 
 > A PHP extension for JSON Web Token
 
@@ -55,6 +56,10 @@ Array
 ```
 
 ## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
+
+## Benchmarks
+
+![Benchmarks](https://cdoco.com/images/jwt-benchmarks.png "Benchmarks")
 
 ## Methods
 
