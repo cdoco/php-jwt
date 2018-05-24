@@ -29,11 +29,12 @@
 #include "zend_smart_str.h"
 #include "ext/standard/base64.h"
 
-#include "openssl/bio.h"
-#include "openssl/evp.h"
-#include "openssl/hmac.h"
-#include "openssl/buffer.h"
-#include "openssl/pem.h"
+/* OpenSSL includes */
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/buffer.h>
+#include <openssl/pem.h>
 
 /* Routines to support crypto in JWT using OpenSSL. */
 

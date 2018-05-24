@@ -32,6 +32,9 @@
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
 
+/* OpenSSL includes */
+#include <openssl/conf.h>
+
 #include "php_jwt.h"
 
 /* string to algorithm */
@@ -400,6 +403,12 @@ PHP_MINFO_FUNCTION(jwt)
     php_info_print_table_start();
     php_info_print_table_header(2, "jwt support", "enabled");
     php_info_print_table_row(2, "Version", PHP_JWT_VERSION);
+    php_info_print_table_row(2, "JWT SSL library", "OpenSSL");
+
+    /* openssl version info */
+    php_info_print_table_row(2, "OpenSSL Library Version", SSLeay_version(SSLEAY_VERSION));
+	php_info_print_table_row(2, "OpenSSL Header Version", OPENSSL_VERSION_TEXT);
+
     php_info_print_table_end();
 }
 
