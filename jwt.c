@@ -261,6 +261,8 @@ PHP_FUNCTION(jwt_encode)
     jwt->alg = jwt_str_alg(alg);
 
     if (jwt->alg == JWT_ALG_INVAL) {
+        jwt_free(jwt);
+
         zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
         RETURN_FALSE;
     }
@@ -276,10 +278,15 @@ PHP_FUNCTION(jwt_encode)
     php_json_encode(&json_header, &header, 0);
     php_json_encode(&json_claims, claims, 0);
 
+    zval_ptr_dtor(&header);
+
     /* base64 encode */
     smart_str_appends(&segments, jwt_b64_url_encode(json_header.s));
     smart_str_appends(&segments, ".");
     smart_str_appends(&segments, jwt_b64_url_encode(json_claims.s));
+
+    smart_str_free(&json_header);
+    smart_str_free(&json_claims);
 
     /* set jwt struct */
     jwt->key = key;
@@ -287,24 +294,26 @@ PHP_FUNCTION(jwt_encode)
 
     /* sign */
     if (jwt_sign(jwt, &sig, &sig_len)) {
+        efree(sig);
+        jwt_free(jwt);
+
         zend_throw_exception(zend_ce_exception, "Signature error", 0);
         RETURN_FALSE;
     }
 
+    /* string concatenation */
     smart_str_appends(&segments, ".");
 
     zend_string *sig_str = zend_string_init(sig, sig_len, 0);
 
     smart_str_appends(&segments, jwt_b64_url_encode(sig_str));
+    zend_string_free(sig_str);
+
     smart_str_0(&segments);
 
     /* free */
     efree(sig);
     jwt_free(jwt);
-    zval_ptr_dtor(&header);
-    smart_str_free(&json_header);
-    smart_str_free(&json_claims);
-    zend_string_free(sig_str);
     
     RETURN_STR(segments.s);
 }
@@ -334,7 +343,7 @@ PHP_FUNCTION(jwt_decode)
 
     if (jwt->alg == JWT_ALG_INVAL) {
         zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
-        RETURN_FALSE;
+        goto decode_done;
     }
 
     /* Find the components. */
@@ -361,9 +370,12 @@ PHP_FUNCTION(jwt_decode)
     zend_string *json_h = jwt_b64_url_decode(head);
 
     php_json_decode_ex(&zv, ZSTR_VAL(json_h), ZSTR_LEN(json_h), PHP_JSON_OBJECT_AS_ARRAY, 512);
+    zend_string_free(json_h);
 
     if (Z_TYPE(zv) == IS_ARRAY) {
         zval *zalg = zend_hash_str_find(Z_ARRVAL(zv), "alg", strlen("alg"));
+
+        zval_ptr_dtor(&zv);
 
         if (strcmp(Z_STRVAL_P(zalg), alg)) {
             zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
@@ -388,11 +400,8 @@ PHP_FUNCTION(jwt_decode)
 
     if (jwt_verify(jwt, sig)) {
         zend_throw_exception(zend_ce_exception, "Signature verification failed", 0);
-        RETURN_FALSE;
     }
 
-    zval_ptr_dtor(&zv);
-    zend_string_free(json_h);
     smart_str_free(&segments);
 
 decode_done:
