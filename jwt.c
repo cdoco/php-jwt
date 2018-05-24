@@ -255,10 +255,8 @@ PHP_FUNCTION(jwt_encode)
     jwt->alg = jwt_str_alg(alg);
 
     if (jwt->alg == JWT_ALG_INVAL) {
-        jwt_free(jwt);
-
         zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
-        RETURN_FALSE;
+        goto encode_done;
     }
 
     /* init */
@@ -288,11 +286,8 @@ PHP_FUNCTION(jwt_encode)
 
     /* sign */
     if (jwt_sign(jwt, &sig, &sig_len)) {
-        efree(sig);
-        jwt_free(jwt);
-
         zend_throw_exception(zend_ce_exception, "Signature error", 0);
-        RETURN_FALSE;
+        goto encode_done;
     }
 
     /* string concatenation */
@@ -305,11 +300,16 @@ PHP_FUNCTION(jwt_encode)
 
     smart_str_0(&segments);
 
+encode_done:
     /* free */
-    efree(sig);
+    if (sig)
+        efree(sig);
+
     jwt_free(jwt);
-    
-    RETURN_STR(segments.s);
+
+    if (segments.s) {
+        RETURN_STR(segments.s);
+    }
 }
 
 PHP_FUNCTION(jwt_decode)
@@ -365,8 +365,8 @@ PHP_FUNCTION(jwt_decode)
 
     if (!json_h) {
         zend_throw_exception(zend_ce_exception, "Base64 decode error", 0);
-		goto decode_done;
-	}
+        goto decode_done;
+    }
 
     php_json_decode_ex(&zv, ZSTR_VAL(json_h), ZSTR_LEN(json_h), PHP_JSON_OBJECT_AS_ARRAY, 512);
     zend_string_free(json_h);
@@ -433,7 +433,7 @@ PHP_MINFO_FUNCTION(jwt)
 
     /* openssl version info */
     php_info_print_table_row(2, "OpenSSL Library Version", SSLeay_version(SSLEAY_VERSION));
-	php_info_print_table_row(2, "OpenSSL Header Version", OPENSSL_VERSION_TEXT);
+    php_info_print_table_row(2, "OpenSSL Header Version", OPENSSL_VERSION_TEXT);
 
     php_info_print_table_end();
 }
