@@ -1,6 +1,6 @@
 <div align="center">
     <p><img src="https://jwt.io/img/logo-asset.svg" /></p>
-    <p><sub>A PHP extension for JSON Web Token (JWT)</sub></p>
+    <p>A PHP extension for JSON Web Token (JWT)</p>
     <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
     <img src="https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square">
 </div>
