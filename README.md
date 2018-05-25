@@ -1,13 +1,14 @@
-# php-jwt
-
-[![Build Status][travis-image]][travis-url]
-![Branch master](https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square)
-
-> A PHP extension for JSON Web Token
+<div align="center">
+    <p><img src="https://jwt.io/img/logo-asset.svg" /></p>
+    <p><sub>A PHP extension for JSON Web Token (JWT)</sub></p>
+    <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
+    <img src="https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square">
+</div>
 
 ## Requirement
 
 - PHP 7 +
+- OpenSSL (Version >= 1.0.1f) Might work with older version as well, but I did not check that.
 
 ## Install
 
@@ -82,6 +83,3 @@ ECDSA|ES256|ES384|ES512
 ## License
 
 PHP License. See the [LICENSE](LICENSE) file.
-
-[travis-url]: https://travis-ci.org/cdoco/php-jwt
-[travis-image]: https://travis-ci.org/cdoco/php-jwt.svg
