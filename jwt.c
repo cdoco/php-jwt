@@ -438,8 +438,14 @@ PHP_MINFO_FUNCTION(jwt)
     php_info_print_table_end();
 }
 
+static const zend_module_dep jwt_dep_deps[] = {
+    ZEND_MOD_REQUIRED("json")
+    ZEND_MOD_END
+};
+
 zend_module_entry jwt_module_entry = {
-    STANDARD_MODULE_HEADER,
+    STANDARD_MODULE_HEADER_EX, NULL,
+    jwt_dep_deps,
     "jwt",
     jwt_functions,
     PHP_MINIT(jwt),
