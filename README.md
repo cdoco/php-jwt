@@ -8,6 +8,7 @@
 ## Requirement
 
 - PHP 7 +
+- PHP json extension, need to JWT extension before loading json extension.
 - OpenSSL (Version >= 1.0.1f) Might work with older version as well, but I did not check that.
 
 ## Install
