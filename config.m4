@@ -39,5 +39,6 @@ fi
 
 if test "$PHP_JWT" != "no"; then
   PHP_SUBST(JWT_SHARED_LIBADD)
+  PHP_ADD_EXTENSION_DEP(jwt, json)
   PHP_NEW_EXTENSION(jwt, jwt.c openssl.c, $ext_shared)
 fi
