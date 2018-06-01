@@ -61,7 +61,7 @@ print_r($decoded_token);
 
 The JWT supports NONE, HMAC, RSASSA and ECDSA algorithms for cryptographic signing.
 
-### NONE
+#### NONE
 
 - none - unsigned token
 
@@ -107,7 +107,7 @@ $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
 print_r($decoded_token);
 ```
 
-### RSA
+#### RSA
 
 - RS256 - RSA using SHA-256 hash algorithm
 - RS384 - RSA using SHA-384 hash algorithm
@@ -131,7 +131,7 @@ $decoded_token = jwt_decode($token, $publicKey, ['algorithm' => 'RS256']);
 print_r($decoded_token);
 ```
 
-### ECDSA
+#### ECDSA
 
 - ES256 - ECDSA using P-256 and SHA-256
 - ES384 - ECDSA using P-384 and SHA-384
