@@ -235,9 +235,21 @@ char *jwt_hash_str_find_str(zval *arr, char *key)
     return str;
 }
 
+long jwt_hash_str_find_long(zval *arr, char *key)
+{
+    zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
+
+    if (zv != NULL) {
+        return Z_LVAL_P(zv);
+    }
+
+    return 0;
+}
+
 int jwt_verify_claims(zval *arr, char *key, char *str)
 {
-    if (strcmp(jwt_hash_str_find_str(arr, key), str)) {
+    char *rs = jwt_hash_str_find_str(arr, key);
+    if (rs && strcmp(rs, str)) {
         return FAILURE;
     }
 
@@ -272,8 +284,14 @@ int jwt_verify_body(char *body, zval *return_value)
         err_msg = "Iss verify fail";
 
     /* iat */
-    if (jwt_options->iat && jwt_verify_claims(return_value, "iat", jwt_options->iat))
-        err_msg = "Iat verify fail";
+    if (jwt_options->iat && jwt_options->iat > (curr_time + jwt_options->leeway)) {
+        struct tm *timeinfo;
+        char buf[128];
+
+        timeinfo = localtime(&curr_time);
+        strftime(buf, sizeof(buf), "Cannot handle token prior to %Y-%m-%d %H:%M:%S", timeinfo);
+        err_msg = buf;
+    }
 
     /* jti */
     if (jwt_options->jti && jwt_verify_claims(return_value, "jti", jwt_options->jti))
@@ -308,15 +326,9 @@ int jwt_parse_options(zval *options)
                     jwt_options->algorithm = alg;
                 }
                 
-                /* leeway */
-                zval *zv_leeway = zend_hash_str_find(Z_ARRVAL_P(options), "leeway", strlen("leeway"));
-                if (zv_leeway != NULL) {
-                    jwt_options->leeway = Z_LVAL_P(zv_leeway);
-                }
-                
                 /* options */
+                jwt_options->leeway = jwt_hash_str_find_long(options, "leeway");
                 jwt_options->iss = jwt_hash_str_find_str(options, "iss");
-                jwt_options->iat = jwt_hash_str_find_str(options, "iat");
                 jwt_options->jti = jwt_hash_str_find_str(options, "jti");
                 jwt_options->aud = jwt_hash_str_find_str(options, "aud");
                 jwt_options->sub = jwt_hash_str_find_str(options, "sub");
@@ -361,15 +373,9 @@ PHP_FUNCTION(jwt_encode)
     }
 
     /* set expiration and not before */
-    zval *zv_exp = zend_hash_str_find(Z_ARRVAL_P(claims), "exp", 3);
-    if (zv_exp) {
-        jwt_options->expiration = Z_LVAL_P(zv_exp);
-    }
-
-    zval *zv_nbf = zend_hash_str_find(Z_ARRVAL_P(claims), "nbf", 3);
-    if (zv_nbf) {
-        jwt_options->not_before = Z_LVAL_P(zv_nbf);
-    }
+    jwt_options->expiration = jwt_hash_str_find_long(claims, "exp");
+    jwt_options->not_before = jwt_hash_str_find_long(claims, "nbf");
+    jwt_options->iat = jwt_hash_str_find_long(claims, "iat");
     
     /* init */
     array_init(&header);

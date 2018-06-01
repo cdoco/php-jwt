@@ -155,6 +155,157 @@ $decoded_token = jwt_decode($token, $publicKey, ['algorithm' => 'ES256']);
 print_r($decoded_token);
 ```
 
+## Support for reserved claim names
+
+JSON Web Token defines some reserved claim names and defines how they should be used. JWT supports these reserved claim names:
+
+- 'exp' (Expiration Time) Claim
+- 'nbf' (Not Before Time) Claim
+- 'iss' (Issuer) Claim
+- 'aud' (Audience) Claim
+- 'jti' (JWT ID) Claim
+- 'iat' (Issued At) Claim
+- 'sub' (Subject) Claim
+
+### Expiration Time Claim
+
+> The `exp` (expiration time) claim identifies the expiration time on or after which the JWT MUST NOT be accepted for processing. The processing of the `exp` claim requires that the current date/time MUST be before the expiration date/time listed in the `exp` claim. Implementers MAY provide for some small `leeway`, usually no more than a few minutes, to account for clock skew. Its value MUST be a number containing a **NumericDate** value. Use of this claim is OPTIONAL.
+
+#### Handle Expiration Claim
+
+```php
+$payload = ['data' => 'data', 'exp' => time() + 4 * 3600];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
+} catch (Exception $e) {
+    // Expired token
+    $e->getMessage();
+}
+```
+
+#### Adding Leeway
+
+```php
+$payload = ['data' => 'data', 'exp' => time() - 10];
+
+// build expired token
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['leeway' => 30, 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+    // Expired token
+}
+```
+
+### Not Before Time Claim
+
+> The `nbf` (not before) claim identifies the time before which the JWT MUST NOT be accepted for processing. The processing of the `nbf` claim requires that the current date/time MUST be after or equal to the not-before date/time listed in the `nbf` claim. Implementers MAY provide for some small `leeway`, usually no more than a few minutes, to account for clock skew. Its value MUST be a number containing a **NumericDate** value. Use of this claim is OPTIONAL.
+
+#### Handle Not Before Claim
+
+```php
+$payload = ['data' => 'data', 'nbf' => time() - 3600];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
+} catch (Exception $e) {
+    // Handle invalid token
+}
+```
+
+#### Adding Leeway
+
+```php
+$payload = ['data' => 'data', 'nbf' => time() + 10];
+
+// build expired token
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['leeway' => 30, 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+    // Handle invalid token
+}
+```
+
+### Issuer Claim
+
+> The `iss` (issuer) claim identifies the principal that issued the JWT. The processing of this claim is generally application specific. The `iss` value is a case-sensitive string containing a **StringOrURI** value. Use of this claim is OPTIONAL.
+
+```php
+$payload = ['data' => 'data', 'iss' => 'http://example.org'];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'http://example.org', 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+     // Handle invalid token
+}
+```
+
+### Audience Claim
+
+```php
+$payload = ['data' => 'data', 'aud' => 'Young Man'];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'Young Man', 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+     // Handle invalid token
+}
+```
+
+### JWT ID Claim
+
+```php
+$payload = ['data' => 'data', 'jti' => md5('id')];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['jti' => md5('id'), 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+     // Handle invalid token
+}
+```
+
+### Issued At Claim
+
+```php
+$payload = ['data' => 'data', 'iat' => time()];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
+} catch (Exception $e) {
+     // Handle invalid token
+}
+```
+
+### Subject Claim
+
+```php
+$payload = ['data' => 'data', 'sub' => 'Subject'];
+
+$token = jwt_encode($payload, $hmackey, 'HS256');
+
+try {
+    $decoded_token = jwt_decode($token, $hmackey, ['sub' => 'Subject', 'algorithm' => 'HS256']);
+} catch (Exception $e) {
+     // Handle invalid token
+}
+```
+
 ## Benchmarks
 
 ![Benchmarks](https://cdoco.com/images/jwt-benchmarks.png "Benchmarks")

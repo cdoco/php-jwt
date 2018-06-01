@@ -59,7 +59,7 @@ typedef struct options {
   time_t expiration;
   time_t not_before;
   char *iss;
-  char *iat;
+  time_t iat;
   char *jti;
   char *aud;
   char *sub;
