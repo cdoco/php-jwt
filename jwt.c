@@ -550,6 +550,13 @@ const zend_function_entry jwt_functions[] = {
 
 /* GINIT */
 PHP_GINIT_FUNCTION(jwt) {
+    jwt_globals->expiration = 0;
+    jwt_globals->not_before = 0;
+    jwt_globals->iss = NULL;
+    jwt_globals->iat = 0;
+    jwt_globals->jti = NULL;
+    jwt_globals->aud = NULL;
+    jwt_globals->sub = NULL;
     jwt_globals->leeway = 0;
     jwt_globals->algorithm = "HS256";
 }
