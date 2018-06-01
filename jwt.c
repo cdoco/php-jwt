@@ -398,18 +398,14 @@ PHP_FUNCTION(jwt_encode)
     smart_str_free(&json_header);
     smart_str_free(&json_claims);
 
-    printf("%s\n", "=========");
-
     /* sign */
     if (jwt->alg == JWT_ALG_NONE) {
         // alg none.
 		smart_str_appendl(&segments, ".", 1);
-        printf("%s\n", "++++++++++++");
     } else {
         /* set jwt struct */
         jwt->key = key;
         jwt->str = segments.s;
-        printf("%s\n", "------------");
 
         /* sign */
         if (jwt_sign(jwt, &sig, &sig_len)) {
@@ -427,6 +423,8 @@ PHP_FUNCTION(jwt_encode)
     }
 
     smart_str_0(&segments);
+
+    printf("%s\n", "++++++++++++");
 
 encode_done:
     /* free */
