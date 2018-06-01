@@ -364,15 +364,17 @@ PHP_FUNCTION(jwt_encode)
     /* init jwt */
     jwt_new(&jwt);
 
-    printf("%s\n", alg);
-
     /* check algorithm */
     jwt->alg = jwt_str_alg(alg);
+
+    printf("%d\n", jwt->alg);
 
     if (jwt->alg == JWT_ALG_INVAL) {
         zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
         goto encode_done;
     }
+
+    printf("%s\n", "=====");
 
     /* set expiration and not before */
     jwt_options->expiration = jwt_hash_str_find_long(claims, "exp");
