@@ -352,7 +352,7 @@ PHP_FUNCTION(jwt_encode)
     zend_string *key = NULL;
     smart_str json_header = {0}, json_claims = {0}, segments = {0};
 
-    char *sig = NULL, *alg = NULL;
+    char *sig = NULL, *alg = "HS256";
     unsigned int sig_len;
     size_t alg_len;
     jwt_t *jwt = NULL;
@@ -364,8 +364,7 @@ PHP_FUNCTION(jwt_encode)
     /* init jwt */
     jwt_new(&jwt);
 
-    /* not set algorithm */
-    alg = (alg == NULL) ? "HS256" : alg;
+    printf("%s\n", alg);
 
     /* check algorithm */
     jwt->alg = jwt_str_alg(alg);

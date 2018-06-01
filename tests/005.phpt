@@ -1,5 +1,5 @@
 --TEST--
-Check for jwt none algorithm
+Check for jwt NONE algorithm
 --SKIPIF--
 <?php if (!extension_loaded("jwt")) print "skip"; ?>
 --FILE--
