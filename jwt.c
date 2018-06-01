@@ -274,7 +274,7 @@ int jwt_verify_body(char *body, zval *return_value)
         struct tm *timeinfo;
         char buf[128];
 
-        timeinfo = localtime(&curr_time);
+        timeinfo = localtime(&JWT_G(not_before));
         strftime(buf, sizeof(buf), "Cannot handle token prior to %Y-%m-%d %H:%M:%S", timeinfo);
         err_msg = buf;
     }
@@ -288,7 +288,7 @@ int jwt_verify_body(char *body, zval *return_value)
         struct tm *timeinfo;
         char buf[128];
 
-        timeinfo = localtime(&curr_time);
+        timeinfo = localtime(&JWT_G(iat));
         strftime(buf, sizeof(buf), "Cannot handle token prior to %Y-%m-%d %H:%M:%S", timeinfo);
         err_msg = buf;
     }
