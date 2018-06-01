@@ -39,7 +39,7 @@ $token = jwt_encode($payload, $key);
 //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.UcrCt9o9rz38kKMTa-nCrm7JNQRNAId5Xg9C7EIl2Zc
 echo $token;
 
-print_r(jwt_decode($token, $key));
+$decoded_token = jwt_decode($token, $key);
 
 // Array
 // (
@@ -52,6 +52,7 @@ print_r(jwt_decode($token, $key));
 //    [iss] => http://example.org
 //    [sub] => 1234567890
 // )
+print_r($decoded_token);
 ```
 
 ## Algorithms and Usage
