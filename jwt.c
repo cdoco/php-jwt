@@ -567,8 +567,6 @@ PHP_MINIT_FUNCTION(jwt)
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
     /* free */
-    efree(jwt_options);
-    
     return SUCCESS;
 }
 
