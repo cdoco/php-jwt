@@ -374,11 +374,8 @@ PHP_FUNCTION(jwt_encode)
 
     /* set expiration and not before */
     jwt_options->expiration = jwt_hash_str_find_long(claims, "exp");
-    printf("%s\n", "1");
     jwt_options->not_before = jwt_hash_str_find_long(claims, "nbf");
-    printf("%s\n", "2");
     jwt_options->iat = jwt_hash_str_find_long(claims, "iat");
-    printf("%s\n", "3");
     
     /* init */
     array_init(&header);
@@ -401,14 +398,18 @@ PHP_FUNCTION(jwt_encode)
     smart_str_free(&json_header);
     smart_str_free(&json_claims);
 
+    printf("%s\n", "=========");
+
     /* sign */
     if (jwt->alg == JWT_ALG_NONE) {
         // alg none.
 		smart_str_appendl(&segments, ".", 1);
+        printf("%s\n", "++++++++++++");
     } else {
         /* set jwt struct */
         jwt->key = key;
         jwt->str = segments.s;
+        printf("%s\n", "------------");
 
         /* sign */
         if (jwt_sign(jwt, &sig, &sig_len)) {
