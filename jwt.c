@@ -37,7 +37,7 @@
 
 #include "php_jwt.h"
 
-static options_t *jwt_options;
+ZEND_DECLARE_MODULE_GLOBALS(jwt)
 
 /* string to algorithm */
 jwt_alg_t jwt_str_alg(const char *alg)
@@ -265,12 +265,12 @@ int jwt_verify_body(char *body, zval *return_value)
     zend_string_free(vs);
 
     /* Expiration */
-    if (jwt_options->expiration && (curr_time - jwt_options->leeway) >= jwt_options->expiration) {
+    if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration)) {
         err_msg = "Expired token";
     }
 
     /* not before */
-    if (jwt_options->not_before && jwt_options->not_before > (curr_time + jwt_options->leeway)) {
+    if (JWT_G(not_before) && JWT_G(not_before) > (curr_time + JWT_G(leeway))) {
         struct tm *timeinfo;
         char buf[128];
 
@@ -280,11 +280,11 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* iss */
-    if (jwt_options->iss && jwt_verify_claims(return_value, "iss", jwt_options->iss))
+    if (JWT_G(iss) && jwt_verify_claims(return_value, "iss", JWT_G(iss)))
         err_msg = "Iss verify fail";
 
     /* iat */
-    if (jwt_options->iat && jwt_options->iat > (curr_time + jwt_options->leeway)) {
+    if (JWT_G(iat) && JWT_G(iat) > (curr_time + JWT_G(leeway))) {
         struct tm *timeinfo;
         char buf[128];
 
@@ -294,15 +294,15 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* jti */
-    if (jwt_options->jti && jwt_verify_claims(return_value, "jti", jwt_options->jti))
+    if (JWT_G(jti) && jwt_verify_claims(return_value, "jti", JWT_G(jti)))
         err_msg = "Tti verify fail";
 
     /* aud */
-    if (jwt_options->aud && jwt_verify_claims(return_value, "aud", jwt_options->aud))
+    if (JWT_G(aud) && jwt_verify_claims(return_value, "aud", JWT_G(aud)))
         err_msg = "Aud verify fail";
 
     /* sub */
-    if (jwt_options->sub && jwt_verify_claims(return_value, "sub", jwt_options->sub))
+    if (JWT_G(sub) && jwt_verify_claims(return_value, "sub", JWT_G(sub)))
         err_msg = "Sub verify fail";
 
     if (err_msg) {
@@ -323,20 +323,20 @@ int jwt_parse_options(zval *options)
                 /* check algorithm */
                 char *alg = jwt_hash_str_find_str(options, "algorithm");
                 if (alg) {
-                    jwt_options->algorithm = alg;
+                    JWT_G(algorithm) = alg;
                 }
                 
                 /* options */
-                jwt_options->leeway = jwt_hash_str_find_long(options, "leeway");
-                jwt_options->iss = jwt_hash_str_find_str(options, "iss");
-                jwt_options->jti = jwt_hash_str_find_str(options, "jti");
-                jwt_options->aud = jwt_hash_str_find_str(options, "aud");
-                jwt_options->sub = jwt_hash_str_find_str(options, "sub");
+                JWT_G(leeway) = jwt_hash_str_find_long(options, "leeway");
+                JWT_G(iss) = jwt_hash_str_find_str(options, "iss");
+                JWT_G(jti) = jwt_hash_str_find_str(options, "jti");
+                JWT_G(aud) = jwt_hash_str_find_str(options, "aud");
+                JWT_G(sub) = jwt_hash_str_find_str(options, "sub");
             }
             break;
         case IS_NULL:
         case IS_FALSE:
-            jwt_options->algorithm = "none";
+            JWT_G(algorithm) = "none";
             break;
         default:
             break;
@@ -373,9 +373,9 @@ PHP_FUNCTION(jwt_encode)
     }
 
     /* set expiration and not before */
-    jwt_options->expiration = jwt_hash_str_find_long(claims, "exp");
-    jwt_options->not_before = jwt_hash_str_find_long(claims, "nbf");
-    jwt_options->iat = jwt_hash_str_find_long(claims, "iat");
+    JWT_G(expiration) = jwt_hash_str_find_long(claims, "exp");
+    JWT_G(not_before) = jwt_hash_str_find_long(claims, "nbf");
+    JWT_G(iat) = jwt_hash_str_find_long(claims, "iat");
     
     /* init */
     array_init(&header);
@@ -460,7 +460,7 @@ PHP_FUNCTION(jwt_decode)
     }
 
     /* Algorithm */
-    jwt->alg = jwt_str_alg(jwt_options->algorithm);
+    jwt->alg = jwt_str_alg(JWT_G(algorithm));
 
     if (jwt->alg == JWT_ALG_INVAL) {
         zend_throw_exception(zend_ce_exception, "Algorithm not supported", 0);
@@ -503,7 +503,7 @@ PHP_FUNCTION(jwt_decode)
 
         zval_ptr_dtor(&zv);
 
-        if (strcmp(Z_STRVAL_P(zalg), jwt_options->algorithm)) {
+        if (strcmp(Z_STRVAL_P(zalg), JWT_G(algorithm))) {
             zend_throw_exception(zend_ce_exception, "Algorithm not allowed", 0);
             goto decode_done;
         }
@@ -548,25 +548,19 @@ const zend_function_entry jwt_functions[] = {
     PHP_FE_END
 };
 
+/* GINIT */
+PHP_GINIT_FUNCTION(jwt) {
+    jwt_globals->leeway = 0;
+    jwt_globals->algorithm = "HS256";
+}
+
 PHP_MINIT_FUNCTION(jwt)
 {
-    jwt_options = emalloc(sizeof(options_t));
-    if (!jwt_options) {
-        return FAILURE;
-    }
-
-    memset(jwt_options, 0, sizeof(options_t));
-
-    /* Init options */
-    jwt_options->leeway = 0;
-    jwt_options->algorithm = "HS256";
-
     return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
-    /* free */
     return SUCCESS;
 }
 
@@ -600,7 +594,11 @@ zend_module_entry jwt_module_entry = {
     NULL,	/* Replace with NULL if there's nothing to do at request end */
     PHP_MINFO(jwt),
     PHP_JWT_VERSION,
-    STANDARD_MODULE_PROPERTIES
+    PHP_MODULE_GLOBALS(jwt),
+    PHP_GINIT(jwt),
+    NULL,
+    NULL,
+    STANDARD_MODULE_PROPERTIES_EX
 };
 
 #ifdef COMPILE_DL_JWT

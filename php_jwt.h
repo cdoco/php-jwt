@@ -30,6 +30,21 @@ extern zend_module_entry jwt_module_entry;
 #include "TSRM.h"
 #endif
 
+#define JWT_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(jwt, v)
+
+ZEND_BEGIN_MODULE_GLOBALS(jwt)
+  time_t expiration;
+  time_t not_before;
+  char *iss;
+  time_t iat;
+  char *jti;
+  char *aud;
+  char *sub;
+  size_t leeway;
+  char *algorithm;
+ZEND_END_MODULE_GLOBALS(jwt)
+
+
 /** JWT algorithm types. */
 typedef enum jwt_alg {
   JWT_ALG_NONE = 0,
@@ -53,19 +68,6 @@ typedef struct jwt {
   zend_string *key;
   zend_string *str;
 } jwt_t;
-
-/** Options */
-typedef struct options {
-  time_t expiration;
-  time_t not_before;
-  char *iss;
-  time_t iat;
-  char *jti;
-  char *aud;
-  char *sub;
-  size_t leeway;
-  char *algorithm;
-} options_t;
 
 char *jwt_b64_url_encode(zend_string *input);
 void jwt_b64_url_encode_ex(char *str);
