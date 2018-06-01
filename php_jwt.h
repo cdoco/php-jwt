@@ -54,6 +54,19 @@ typedef struct jwt {
   zend_string *str;
 } jwt_t;
 
+/** Options */
+typedef struct options {
+  time_t expiration;
+  time_t not_before;
+  char *iss;
+  char *iat;
+  char *jti;
+  char *aud;
+  char *sub;
+  size_t leeway;
+  char *algorithm;
+} options_t;
+
 char *jwt_b64_url_encode(zend_string *input);
 void jwt_b64_url_encode_ex(char *str);
 zend_string *jwt_b64_url_decode(const char *src);

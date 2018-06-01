@@ -13,10 +13,11 @@ $claims = array(
     ],
     "iss" => "http://example.org",
     "sub" => "1234567890",
+    "nbf" => time() + 10
 );
 
 // default HS256 algorithm
 $token = jwt_encode($claims, $key);
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $key));
+print_r(jwt_decode($token, $key, ['leeway' => 1, "iss" => "http://example.org"]));
