@@ -424,8 +424,6 @@ PHP_FUNCTION(jwt_encode)
 
     smart_str_0(&segments);
 
-    printf("%s\n", "++++++++++++");
-
 encode_done:
     /* free */
     if (sig)
@@ -569,6 +567,8 @@ PHP_MINIT_FUNCTION(jwt)
 PHP_MSHUTDOWN_FUNCTION(jwt)
 {
     /* free */
+    efree(jwt_options);
+    
     return SUCCESS;
 }
 
