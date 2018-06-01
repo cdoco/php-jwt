@@ -55,7 +55,11 @@ $decoded_token = jwt_decode($token, $key);
 print_r($decoded_token);
 ```
 
+## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
+
 ## Algorithms and Usage
+
+The JWT supports NONE, HMAC, RSASSA and ECDSA algorithms for cryptographic signing.
 
 ### NONE
 
@@ -150,8 +154,6 @@ $decoded_token = jwt_decode($token, $publicKey, ['algorithm' => 'ES256']);
 // )
 print_r($decoded_token);
 ```
-
-## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
 
 ## Benchmarks
 
