@@ -23,8 +23,8 @@ $ make && make install
 ## Quick Example
 
 ```php
-$key = "example_key";
-$claims = array(
+$key = "example-hmac-key";
+$payload = array(
     "data" => [
         "name" => "ZiHang Gao",
         "admin" => true
@@ -34,7 +34,7 @@ $claims = array(
 );
 
 // default HS256 algorithm
-$token = jwt_encode($claims, $key);
+$token = jwt_encode($payload, $key);
 
 echo $token . PHP_EOL;
 //eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.
@@ -63,14 +63,14 @@ Array
 
 ![Benchmarks](https://cdoco.com/images/jwt-benchmarks.png "Benchmarks")
 
-## Methods
+## Functions
 
 ```php
 //encode
 string jwt_encode(array $claims, string $key [, string $alg = 'HS256'])
 
 //decode
-array jwt_decode(string $token, string $key [, string $alg = 'HS256'])
+array jwt_decode(string $token, string $key [, array $options = ['algorithm' => 'HS256']])
 ```
 
 ## The algorithm of support
