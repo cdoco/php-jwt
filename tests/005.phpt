@@ -1,10 +1,10 @@
 --TEST--
-Check for jwt HMAC algorithm (HS256)
+Check for jwt NONE algorithm
 --SKIPIF--
 <?php if (!extension_loaded("jwt")) print "skip"; ?>
 --FILE--
 <?php 
-$key = "example_key";
+
 $payload = array(
     "data" => [
         "name" => "ZiHang Gao",
@@ -14,13 +14,14 @@ $payload = array(
     "sub" => "1234567890",
 );
 
-$token = jwt_encode($payload, $key);
+// none algorithm
+$token = jwt_encode($payload, null, 'none');
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $key));
+print_r(jwt_decode($token, null, false));
 ?>
 --EXPECT--
-eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.6BafFmznKQOPVO9q5f5GgTVadITh2KmdUlJBF8UHOxo
+eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.
 Array
 (
     [data] => Array

@@ -28,7 +28,7 @@ UnR8tSdwUqI3119zAQIDAQAB
 -----END PUBLIC KEY-----
 EOD;
 
-$claims = array(
+$payload = array(
     "data" => [
         "name" => "ZiHang Gao",
         "admin" => true
@@ -37,7 +37,7 @@ $claims = array(
     "sub" => "1234567890",
 );
 
-$token = jwt_encode($claims, $privateKey, 'RS256');
+$token = jwt_encode($payload, $privateKey, 'RS256');
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $publicKey, 'RS256'));
+print_r(jwt_decode($token, $publicKey, ['algorithm' => 'RS256']));

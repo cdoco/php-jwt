@@ -32,7 +32,7 @@ UnR8tSdwUqI3119zAQIDAQAB
 -----END PUBLIC KEY-----
 EOD;
 
-$claims = array(
+$payload = array(
     "data" => [
         "name" => "ZiHang Gao",
         "admin" => true
@@ -41,10 +41,10 @@ $claims = array(
     "sub" => "1234567890",
 );
 
-$token = jwt_encode($claims, $privateKey, 'RS256');
+$token = jwt_encode($payload, $privateKey, 'RS256');
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $publicKey, 'RS256'));
+print_r(jwt_decode($token, $publicKey, ['algorithm' => 'RS256']));
 ?>
 --EXPECT--
 eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.iSpiBRxW0RKDK0KZRDTwEQmllzkS-WQKMzQ8j3pSSA8NI3ukj0EjZCWIsWfgmb20xKViT5UhUAf_1UQwxwu5k0laEkJ8Ze04gj1P8KO--7BkxUFp4UerkDex49lwHSJmvTJBRZBy9t7BDqCaouEpUe0vZ6z_siMX95VMvVrk0g0

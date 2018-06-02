@@ -1,6 +1,5 @@
 <?php
 
-$key = "example_key";
 $payload = array(
     "data" => [
         "name" => "ZiHang Gao",
@@ -10,8 +9,8 @@ $payload = array(
     "sub" => "1234567890",
 );
 
-// default HS256 algorithm
-$token = jwt_encode($payload, $key);
+// none algorithm
+$token = jwt_encode($payload, null, 'none');
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $key));
+print_r(jwt_decode($token, null, false));
