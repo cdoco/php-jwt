@@ -1,6 +1,6 @@
 <div align="center">
     <p><img src="https://jwt.io/img/logo-asset.svg" /></p>
-    <p>A PHP extension for JSON Web Token (JWT)</p>
+    <p>A PHP extension for <a target="_blank" href="https://tools.ietf.org/html/rfc7519">RFC 7519 OAuth JSON Web Token (JWT)</a></p>
     <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
     <img src="https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square">
 </div>
@@ -252,19 +252,23 @@ try {
 
 ### Audience Claim
 
+> The `aud` (audience) claim identifies the recipients that the JWT is intended for. Each principal intended to process the JWT MUST identify itself with a value in the audience claim. If the principal processing the claim does not identify itself with a value in the `aud` claim when this claim is present, then the JWT MUST be rejected. In the general case, the `aud` value is an array of case-sensitive strings, each containing a **StringOrURI** value. In the special case when the JWT has one audience, the `aud` value MAY be a single case-sensitive string containing a **StringOrURI** value. The interpretation of audience values is generally application specific. Use of this claim is OPTIONAL.
+
 ```php
 $payload = ['data' => 'data', 'aud' => 'Young Man'];
 
 $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
-    $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'Young Man', 'algorithm' => 'HS256']);
+    $decoded_token = jwt_decode($token, $hmackey, ['aud' => 'Young Man', 'algorithm' => 'HS256']);
 } catch (Exception $e) {
      // Handle invalid token
 }
 ```
 
 ### JWT ID Claim
+
+> The `jti` (JWT ID) claim provides a unique identifier for the JWT. The identifier value MUST be assigned in a manner that ensures that there is a negligible probability that the same value will be accidentally assigned to a different data object; if the application uses multiple issuers, collisions MUST be prevented among values produced by different issuers as well. The `jti` claim can be used to prevent the JWT from being replayed. The `jti` value is a **case-sensitive string**. Use of this claim is OPTIONAL.
 
 ```php
 $payload = ['data' => 'data', 'jti' => md5('id')];
@@ -280,6 +284,8 @@ try {
 
 ### Issued At Claim
 
+> The `iat` (issued at) claim identifies the time at which the JWT was issued. This claim can be used to determine the age of the JWT. Its value MUST be a number containing a **NumericDate** value. Use of this claim is OPTIONAL.
+
 ```php
 $payload = ['data' => 'data', 'iat' => time()];
 
@@ -293,6 +299,8 @@ try {
 ```
 
 ### Subject Claim
+
+> The `sub` (subject) claim identifies the principal that is the subject of the JWT. The Claims in a JWT are normally statements about the subject. The subject value MUST either be scoped to be locally unique in the context of the issuer or be globally unique. The processing of this claim is generally application specific. The sub value is a case-sensitive string containing a **StringOrURI** value. Use of this claim is OPTIONAL.
 
 ```php
 $payload = ['data' => 'data', 'sub' => 'Subject'];
@@ -327,6 +335,13 @@ algorithm|-|-|-
 HMAC|HS256|HS384|HS512
 RSA|RS256|RS384|RS512
 ECDSA|ES256|ES384|ES512
+
+## Inspired By
+
+- <https://github.com/benmcollins/libjwt>
+- <https://github.com/firebase/php-jwt>
+- <https://github.com/kohkimakimoto/php-jwt>
+- <https://github.com/jwt/ruby-jwt>
 
 ## License
 

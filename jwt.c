@@ -348,16 +348,16 @@ int jwt_parse_options(zval *options)
 
 PHP_FUNCTION(jwt_encode)
 {
-    zval *claims = NULL, header;
+    zval *payload = NULL, header;
     zend_string *key = NULL;
-    smart_str json_header = {0}, json_claims = {0}, segments = {0};
+    smart_str json_header = {0}, json_payload = {0}, segments = {0};
 
     char *sig = NULL, *alg = "HS256";
     unsigned int sig_len;
     size_t alg_len;
     jwt_t *jwt = NULL;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "aS|s", &claims, &key, &alg, &alg_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "aS|s", &payload, &key, &alg, &alg_len) == FAILURE) {
         return;
     }
 
@@ -373,9 +373,9 @@ PHP_FUNCTION(jwt_encode)
     }
 
     /* set expiration and not before */
-    JWT_G(expiration) = jwt_hash_str_find_long(claims, "exp");
-    JWT_G(not_before) = jwt_hash_str_find_long(claims, "nbf");
-    JWT_G(iat) = jwt_hash_str_find_long(claims, "iat");
+    JWT_G(expiration) = jwt_hash_str_find_long(payload, "exp");
+    JWT_G(not_before) = jwt_hash_str_find_long(payload, "nbf");
+    JWT_G(iat) = jwt_hash_str_find_long(payload, "iat");
     
     /* init */
     array_init(&header);
@@ -386,17 +386,17 @@ PHP_FUNCTION(jwt_encode)
 
     /* json encode */
     php_json_encode(&json_header, &header, 0);
-    php_json_encode(&json_claims, claims, 0);
+    php_json_encode(&json_payload, payload, 0);
 
     zval_ptr_dtor(&header);
 
     /* base64 encode */
     smart_str_appends(&segments, jwt_b64_url_encode(json_header.s));
     smart_str_appends(&segments, ".");
-    smart_str_appends(&segments, jwt_b64_url_encode(json_claims.s));
+    smart_str_appends(&segments, jwt_b64_url_encode(json_payload.s));
 
     smart_str_free(&json_header);
-    smart_str_free(&json_claims);
+    smart_str_free(&json_payload);
 
     /* sign */
     if (jwt->alg == JWT_ALG_NONE) {
