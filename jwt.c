@@ -225,32 +225,88 @@ zend_string *jwt_b64_url_decode(const char *src)
 
 char *jwt_hash_str_find_str(zval *arr, char *key)
 {
-    char *str = NULL;
+    char *str = NULL, err_msg[128];
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
 
     if (zv != NULL) {
-        str = Z_STRVAL_P(zv);
-    }
+        if (Z_TYPE_P(zv) == IS_STRING) {
+            str = Z_STRVAL_P(zv);
+        } else {
+            sprintf(err_msg, "%s type must be string", key);
+            zend_throw_exception(zend_ce_exception, err_msg, 0);
+        }
+    } 
 
     return str;
 }
 
 long jwt_hash_str_find_long(zval *arr, char *key)
 {
+    char err_msg[128];
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
 
     if (zv != NULL) {
-        return Z_LVAL_P(zv);
+        if (Z_TYPE_P(zv) == IS_LONG) {
+            return Z_LVAL_P(zv);
+        } else {
+            sprintf(err_msg, "%s type must be long", key);
+            zend_throw_exception(zend_ce_exception, err_msg, 0);
+        }
     }
 
     return 0;
 }
 
+zend_array *jwt_hash_str_find_ht(zval *arr, char *key)
+{
+    char err_msg[128];
+    zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
+
+    if (zv != NULL) {
+        if (Z_TYPE_P(zv) == IS_ARRAY) {
+            return Z_ARRVAL_P(zv);
+        } else {
+            sprintf(err_msg, "%s type must be array", key);
+            zend_throw_exception(zend_ce_exception, err_msg, 0);
+        }
+    }
+
+    return NULL;
+}
+
 int jwt_verify_claims(zval *arr, char *key, char *str)
 {
     char *rs = jwt_hash_str_find_str(arr, key);
-    if (rs && strcmp(rs, str)) {
+    if (rs && str && strcmp(rs, str)) {
         return FAILURE;
+    }
+
+    return 0;
+}
+
+int jwt_array_equals(zend_array *arr1, zend_array *arr2) {
+    zend_ulong i;
+    zval *value = NULL;
+
+    if (arr1 && arr2) {
+        if (zend_array_count(arr1) != zend_array_count(arr2)) {
+            return FAILURE;
+        }
+
+        ZEND_HASH_FOREACH_NUM_KEY_VAL(arr1, i, value) {
+            zval *tmp = zend_hash_index_find(arr2, i);
+
+            if (value && tmp){
+                if (Z_TYPE_P(value) == IS_STRING && Z_TYPE_P(tmp) == IS_STRING) {
+                    if (strcmp(Z_STRVAL_P(value), Z_STRVAL_P(tmp))) {
+                        return FAILURE;
+                    }
+                } else {
+                    zend_throw_exception(zend_ce_exception, "Aud each item type must be string", 0);
+                    return FAILURE;
+                }
+            }
+        }ZEND_HASH_FOREACH_END();
     }
 
     return 0;
@@ -261,13 +317,14 @@ int jwt_verify_body(char *body, zval *return_value)
     char *err_msg = NULL;
     time_t curr_time = time((time_t*)NULL);
     zend_string *vs = jwt_b64_url_decode(body);
+
+    /* decode json to array */
     php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
     zend_string_free(vs);
 
     /* Expiration */
-    if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration)) {
+    if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration))
         err_msg = "Expired token";
-    }
 
     /* not before */
     if (JWT_G(not_before) && JWT_G(not_before) > (curr_time + JWT_G(leeway))) {
@@ -280,7 +337,7 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* iss */
-    if (JWT_G(iss) && jwt_verify_claims(return_value, "iss", JWT_G(iss)))
+    if (jwt_verify_claims(return_value, "iss", JWT_G(iss)))
         err_msg = "Iss verify fail";
 
     /* iat */
@@ -294,15 +351,15 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* jti */
-    if (JWT_G(jti) && jwt_verify_claims(return_value, "jti", JWT_G(jti)))
+    if (jwt_verify_claims(return_value, "jti", JWT_G(jti)))
         err_msg = "Tti verify fail";
 
     /* aud */
-    if (JWT_G(aud) && jwt_verify_claims(return_value, "aud", JWT_G(aud)))
+    if (jwt_array_equals(JWT_G(aud), jwt_hash_str_find_ht(return_value, "aud")))
         err_msg = "Aud verify fail";
 
     /* sub */
-    if (JWT_G(sub) && jwt_verify_claims(return_value, "sub", JWT_G(sub)))
+    if (jwt_verify_claims(return_value, "sub", JWT_G(sub)))
         err_msg = "Sub verify fail";
 
     if (err_msg) {
@@ -330,7 +387,7 @@ int jwt_parse_options(zval *options)
                 JWT_G(leeway) = jwt_hash_str_find_long(options, "leeway");
                 JWT_G(iss) = jwt_hash_str_find_str(options, "iss");
                 JWT_G(jti) = jwt_hash_str_find_str(options, "jti");
-                JWT_G(aud) = jwt_hash_str_find_str(options, "aud");
+                JWT_G(aud) = jwt_hash_str_find_ht(options, "aud");
                 JWT_G(sub) = jwt_hash_str_find_str(options, "sub");
             }
             break;

@@ -1,5 +1,5 @@
 <div align="center">
-    <p><img src="https://jwt.io/img/logo-asset.svg" /></p>
+    <p><a target="_blank" href="https://jwt.io"><img src="https://jwt.io/img/logo-asset.svg" /></a></p>
     <p>A PHP extension for <a target="_blank" href="https://tools.ietf.org/html/rfc7519">RFC 7519 OAuth JSON Web Token (JWT)</a></p>
     <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
     <img src="https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square">
@@ -20,7 +20,7 @@ $ phpize && ./configure --with-openssl=/path/to/openssl
 $ make && make install
 ```
 
-## Quick Example
+## Quick [Example](https://github.com/cdoco/php-jwt/tree/master/example)
 
 ```php
 $key = "example-hmac-key";
@@ -54,8 +54,6 @@ $decoded_token = jwt_decode($token, $key);
 // )
 print_r($decoded_token);
 ```
-
-## [Example](https://github.com/cdoco/php-jwt/tree/master/example)
 
 ## Algorithms and Usage
 
@@ -255,12 +253,12 @@ try {
 > The `aud` (audience) claim identifies the recipients that the JWT is intended for. Each principal intended to process the JWT MUST identify itself with a value in the audience claim. If the principal processing the claim does not identify itself with a value in the `aud` claim when this claim is present, then the JWT MUST be rejected. In the general case, the `aud` value is an array of case-sensitive strings, each containing a **StringOrURI** value. In the special case when the JWT has one audience, the `aud` value MAY be a single case-sensitive string containing a **StringOrURI** value. The interpretation of audience values is generally application specific. Use of this claim is OPTIONAL.
 
 ```php
-$payload = ['data' => 'data', 'aud' => 'Young Man'];
+$payload = ['data' => 'data', 'aud' => ['Young', 'Old']];
 
 $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
-    $decoded_token = jwt_decode($token, $hmackey, ['aud' => 'Young Man', 'algorithm' => 'HS256']);
+    $decoded_token = jwt_decode($token, $hmackey, ['aud' => ['Young', 'Old'], 'algorithm' => 'HS256']);
 } catch (Exception $e) {
      // Handle invalid token
 }
