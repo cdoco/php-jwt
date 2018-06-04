@@ -225,15 +225,14 @@ zend_string *jwt_b64_url_decode(const char *src)
 
 char *jwt_hash_str_find_str(zval *arr, char *key)
 {
-    char *str = NULL, err_msg[128];
+    char *str = NULL;
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
 
     if (zv != NULL) {
         if (Z_TYPE_P(zv) == IS_STRING) {
             str = Z_STRVAL_P(zv);
         } else {
-            sprintf(err_msg, "%s type must be string", key);
-            zend_throw_exception(zend_ce_exception, err_msg, 0);
+            php_error_docref(NULL, E_WARNING, "%s type must be string", key);
         }
     } 
 
@@ -242,15 +241,13 @@ char *jwt_hash_str_find_str(zval *arr, char *key)
 
 long jwt_hash_str_find_long(zval *arr, char *key)
 {
-    char err_msg[128];
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
 
     if (zv != NULL) {
         if (Z_TYPE_P(zv) == IS_LONG) {
             return Z_LVAL_P(zv);
         } else {
-            sprintf(err_msg, "%s type must be long", key);
-            zend_throw_exception(zend_ce_exception, err_msg, 0);
+            php_error_docref(NULL, E_WARNING, "%s type must be long", key);
         }
     }
 
@@ -259,15 +256,13 @@ long jwt_hash_str_find_long(zval *arr, char *key)
 
 zend_array *jwt_hash_str_find_ht(zval *arr, char *key)
 {
-    char err_msg[128];
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
 
     if (zv != NULL) {
         if (Z_TYPE_P(zv) == IS_ARRAY) {
             return Z_ARRVAL_P(zv);
         } else {
-            sprintf(err_msg, "%s type must be array", key);
-            zend_throw_exception(zend_ce_exception, err_msg, 0);
+            php_error_docref(NULL, E_WARNING, "%s type must be array", key);
         }
     }
 
@@ -302,8 +297,7 @@ int jwt_array_equals(zend_array *arr1, zend_array *arr2) {
                         return FAILURE;
                     }
                 } else {
-                    zend_throw_exception(zend_ce_exception, "Aud each item type must be string", 0);
-                    return FAILURE;
+                    php_error_docref(NULL, E_WARNING, "Aud each item type must be string");
                 }
             }
         }ZEND_HASH_FOREACH_END();
