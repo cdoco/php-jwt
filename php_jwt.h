@@ -38,7 +38,7 @@ ZEND_BEGIN_MODULE_GLOBALS(jwt)
   char *iss;
   time_t iat;
   char *jti;
-  char *aud;
+  zend_array *aud;
   char *sub;
   size_t leeway;
   char *algorithm;
