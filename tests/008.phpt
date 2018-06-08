@@ -11,7 +11,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
     echo "SUCCESS\n";
-} catch (Exception $e) {
+} catch (InvalidIatException $e) {
      // Handle invalid token
 }
 ?>
