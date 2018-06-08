@@ -26,6 +26,14 @@ extern zend_module_entry jwt_module_entry;
 
 #define PHP_JWT_VERSION "0.2.1" /* Replace with version number for your extension */
 
+#ifdef PHP_WIN32
+#	define PHP_JWT_API __declspec(dllexport)
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#	define PHP_JWT_API __attribute__ ((visibility("default")))
+#else
+#	define PHP_JWT_API
+#endif
+
 #ifdef ZTS
 #include "TSRM.h"
 #endif

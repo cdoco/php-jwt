@@ -12,13 +12,13 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'http://example.org', 'algorithm' => 'HS256']);
     echo "SUCCESS\n";
-} catch (Exception $e) {
+} catch (InvalidIssuerException $e) {
      // Handle invalid token
 }
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'test', 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidIssuerException $e) {
      // Handle invalid token
      echo "FAIL\n";
 }

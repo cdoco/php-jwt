@@ -36,7 +36,7 @@ $payload = array(
 // default HS256 algorithm
 $token = jwt_encode($payload, $key);
 
-//eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.UcrCt9o9rz38kKMTa-nCrm7JNQRNAId5Xg9C7EIl2Zc
+// eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsInN1YiI6IjEyMzQ1Njc4OTAifQ.UcrCt9o9rz38kKMTa-nCrm7JNQRNAId5Xg9C7EIl2Zc
 echo $token;
 
 $decoded_token = jwt_decode($token, $key);
@@ -178,9 +178,8 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (ExpiredSignatureException $e) {
     // Expired token
-    $e->getMessage();
 }
 ```
 
@@ -194,7 +193,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['leeway' => 30, 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (ExpiredSignatureException $e) {
     // Expired token
 }
 ```
@@ -212,7 +211,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (BeforeValidException $e) {
     // Handle invalid token
 }
 ```
@@ -227,7 +226,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['leeway' => 30, 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (BeforeValidException $e) {
     // Handle invalid token
 }
 ```
@@ -243,7 +242,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['iss' => 'http://example.org', 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidIssuerException $e) {
      // Handle invalid token
 }
 ```
@@ -259,7 +258,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['aud' => ['Young', 'Old'], 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidAudException $e) {
      // Handle invalid token
 }
 ```
@@ -275,7 +274,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['jti' => md5('id'), 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidJtiException $e) {
      // Handle invalid token
 }
 ```
@@ -291,7 +290,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidIatException $e) {
      // Handle invalid token
 }
 ```
@@ -307,7 +306,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['sub' => 'Subject', 'algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (InvalidSubException $e) {
      // Handle invalid token
 }
 ```

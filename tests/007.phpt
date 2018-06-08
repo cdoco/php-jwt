@@ -10,7 +10,7 @@ $token = jwt_encode($payload, $hmackey, 'HS256');
 
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['algorithm' => 'HS256']);
-} catch (Exception $e) {
+} catch (BeforeValidException $e) {
     // Expired token
     echo "FAIL\n";
 }
@@ -18,7 +18,7 @@ try {
 try {
     $decoded_token = jwt_decode($token, $hmackey, ['leeway' => 30, 'algorithm' => 'HS256']);
     echo "SUCCESS\n";
-} catch (Exception $e) {
+} catch (BeforeValidException $e) {
     // Expired token
 }
 ?>
