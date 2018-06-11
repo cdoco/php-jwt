@@ -318,10 +318,10 @@ try {
 ## Functions
 
 ```php
-//encode
-string jwt_encode(array $claims, string $key [, string $algorithm = 'HS256'])
+// encode
+string jwt_encode(array $payload, string $key [, string $algorithm = 'HS256'])
 
-//decode
+// decode
 array jwt_decode(string $token, string $key [, array $options = ['algorithm' => 'HS256']])
 ```
 

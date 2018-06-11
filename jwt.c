@@ -50,6 +50,18 @@ PHP_JWT_API zend_class_entry *jwt_invalid_sub_cex;
 
 ZEND_DECLARE_MODULE_GLOBALS(jwt)
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_jwt_encode, 0, 0, 2)
+    ZEND_ARG_ARRAY_INFO(0, payload, 1)
+    ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 1)
+    ZEND_ARG_TYPE_INFO(0, alg, IS_STRING, 1)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_jwt_decode, 0, 0, 2)
+    ZEND_ARG_TYPE_INFO(0, token, IS_STRING, 1)
+    ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 1)
+    ZEND_ARG_INFO(0, options)
+ZEND_END_ARG_INFO()
+
 /* string to algorithm */
 jwt_alg_t jwt_str_alg(const char *alg)
 {
@@ -618,8 +630,8 @@ decode_done:
 }
 
 const zend_function_entry jwt_functions[] = {
-    PHP_FE(jwt_encode,	NULL)
-    PHP_FE(jwt_decode,	NULL)
+    PHP_FE(jwt_encode, arginfo_jwt_encode)
+    PHP_FE(jwt_decode, arginfo_jwt_decode)
     PHP_FE_END
 };
 
