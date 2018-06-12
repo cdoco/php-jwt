@@ -2,7 +2,10 @@
     <p><a target="_blank" href="https://jwt.io"><img src="https://jwt.io/img/logo-asset.svg" /></a></p>
     <p>A PHP extension for <a target="_blank" href="https://tools.ietf.org/html/rfc7519">RFC 7519 OAuth JSON Web Token (JWT)</a></p>
     <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
-    <img src="https://img.shields.io/badge/branch-master-brightgreen.svg?style=flat-square">
+    <img src="https://img.shields.io/badge/PHP-%3E%3D7.0.0-blue.svg">
+    <img src="https://img.shields.io/badge/OpenSSL-%3E%3D1.0.1f-blue.svg">
+    <img src="https://img.shields.io/badge/branch-master-brightgreen.svg">
+    <img src="https://img.shields.io/github/repo-size/cdoco/php-jwt.svg">
 </div>
 
 ## Requirement
