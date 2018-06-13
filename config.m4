@@ -13,12 +13,10 @@ if test "$PHP_OPENSSL" != "no"; then
   else
     AC_MSG_CHECKING([for OpenSSL library in default path])
     for i in $SEARCH_PATH ; do
-      for p in /openssl /ssl /; do
-        if test -r $i$p/$SEARCH_FOR; then
-          OPENSSL_DIR=$i$p
-          AC_MSG_RESULT(found in $i$p)
-        fi
-      done
+      if test -r $i/$SEARCH_FOR; then
+        OPENSSL_DIR=$i
+        AC_MSG_RESULT(found in $i)
+      fi
     done
   fi
 
