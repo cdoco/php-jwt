@@ -1,43 +1,43 @@
 dnl $Id$
 dnl config.m4 for extension jwt
 
-PHP_ARG_ENABLE(jwt, whether to enable jwt support,
-  [  --enable-jwt             Enable jwt support])
-
 PHP_ARG_WITH(openssl, whether to use OpenSSL library,
-  [  --with-openssl[=DIR]     Ignore presence of OpenSSL library (requires OpenSSL >= 0.9.8)], no, no)
+  [  --with-openssl[=DIR]     Ignore presence of OpenSSL library (requires OpenSSL >= 0.9.8)])
 
 if test "$PHP_OPENSSL" != "no"; then
-  AC_CHECK_HEADERS([openssl/hmac.h openssl/evp.h])
-  PHP_CHECK_LIBRARY(crypto, EVP_sha512,
-    [
-      PHP_ADD_INCLUDE($PHP_OPENSSL/include)
-      PHP_ADD_LIBRARY_WITH_PATH(crypto, $PHP_OPENSSL/lib, JWT_SHARED_LIBADD)
-    ],
-    [AC_MSG_ERROR(OpenSSL library not found)])
-else
-  for i in /usr/local /usr/local/opt /usr; do
-    if test -f $i/openssl/include/openssl/hmac.h; then
-      OPENSSL_LIB=$i/openssl/lib
-      OPENSSL_INC=$i/openssl/include
-    elif test -f $i/ssl/include/openssl/hmac.h; then
-      OPENSSL_LIB=$i/ssl/lib
-      OPENSSL_INC=$i/ssl/include
-    elif test -f $i/include/openssl/hmac.h; then
-      OPENSSL_LIB=$i/lib64
-      OPENSSL_INC=$i/include
-    fi
-  done
 
-  if test -z "$OPENSSL_INC"; then
-    AC_MSG_ERROR(OpenSSL library not found)
+  SEARCH_PATH="/usr/local /usr /usr/local/opt"
+  SEARCH_FOR="/include/openssl/hmac.h"
+  if test -r $PHP_OPENSSL/$SEARCH_FOR; then
+    OPENSSL_DIR=$PHP_OPENSSL
+  else
+    AC_MSG_CHECKING([for OpenSSL library in default path])
+    for i in $SEARCH_PATH ; do
+      if test -r $i/$SEARCH_FOR; then
+        OPENSSL_DIR=$i
+        AC_MSG_RESULT(found in $i)
+      fi
+    done
   fi
 
-  PHP_ADD_INCLUDE($OPENSSL_INC)
-  PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENSSL_LIB, JWT_SHARED_LIBADD)
-fi
+  if test -z "$OPENSSL_DIR"; then
+    AC_MSG_RESULT([OpenSSL library not found])
+    AC_MSG_ERROR([Please reinstall the OpenSSL library])
+  fi
 
-if test "$PHP_JWT" != "no"; then
+  PHP_ADD_INCLUDE($OPENSSL_DIR/include)
+
+  AC_CHECK_HEADERS([openssl/hmac.h openssl/evp.h])
+  PHP_CHECK_LIBRARY(crypto, EVP_sha512,
+  [
+    PHP_ADD_INCLUDE($OPENSSL_DIR/include)
+    PHP_ADD_LIBRARY_WITH_PATH(crypto, $OPENSSL_DIR/lib, JWT_SHARED_LIBADD)
+  ],[
+    AC_MSG_ERROR(wrong OpenSSL library version)
+  ],[
+    -L$OPENSSL_DIR/lib -lcrypto
+  ])
+
   PHP_SUBST(JWT_SHARED_LIBADD)
   PHP_ADD_EXTENSION_DEP(jwt, json)
   PHP_NEW_EXTENSION(jwt, jwt.c openssl.c, $ext_shared)
