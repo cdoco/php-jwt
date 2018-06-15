@@ -62,6 +62,15 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_jwt_decode, 0, 0, 2)
     ZEND_ARG_INFO(0, options)
 ZEND_END_ARG_INFO()
 
+/* register internal class */
+static zend_class_entry *jwt_register_class(const char *name)
+{
+    zend_class_entry ce;
+
+    INIT_CLASS_ENTRY_EX(ce, name, strlen(name), NULL);
+    return zend_register_internal_class_ex(&ce, zend_ce_exception);
+}
+
 /* string to algorithm */
 jwt_alg_t jwt_str_alg(const char *alg)
 {
@@ -146,6 +155,7 @@ static int jwt_verify(jwt_t *jwt, const char *sig)
     }
 }
 
+/* jwt new */
 int jwt_new(jwt_t **jwt)
 {
     if (!jwt) {
@@ -162,6 +172,7 @@ int jwt_new(jwt_t **jwt)
     return 0;
 }
 
+/* jwt free */
 void jwt_free(jwt_t *jwt)
 {
     if (!jwt) {
@@ -171,6 +182,7 @@ void jwt_free(jwt_t *jwt)
     efree(jwt);
 }
 
+/* base64 url safe encode */
 void jwt_b64_url_encode_ex(char *str)
 {
     int len = strlen(str);
@@ -194,6 +206,7 @@ void jwt_b64_url_encode_ex(char *str)
     str[t] = '\0';
 }
 
+/* base64 encode */
 char *jwt_b64_url_encode(zend_string *input)
 {
     zend_string *b64_str = NULL;
@@ -210,6 +223,7 @@ char *jwt_b64_url_encode(zend_string *input)
     return ZSTR_VAL(new);
 }
 
+/* base64 decode */
 zend_string *jwt_b64_url_decode(const char *src)
 {
     char *new;
@@ -246,6 +260,7 @@ zend_string *jwt_b64_url_decode(const char *src)
     return php_base64_decode_ex((const unsigned char *)new, strlen(new), 1);
 }
 
+/* hash find string */
 char *jwt_hash_str_find_str(zval *arr, char *key)
 {
     char *str = NULL;
@@ -262,6 +277,7 @@ char *jwt_hash_str_find_str(zval *arr, char *key)
     return str;
 }
 
+/* hash find long */
 long jwt_hash_str_find_long(zval *arr, char *key)
 {
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
@@ -277,6 +293,7 @@ long jwt_hash_str_find_long(zval *arr, char *key)
     return 0;
 }
 
+/* hash find zend_array */
 zend_array *jwt_hash_str_find_ht(zval *arr, char *key)
 {
     zval *zv = zend_hash_str_find(Z_ARRVAL_P(arr), key, strlen(key));
@@ -292,7 +309,8 @@ zend_array *jwt_hash_str_find_ht(zval *arr, char *key)
     return NULL;
 }
 
-int jwt_verify_claims(zval *arr, char *key, char *str)
+/* verify string claims */
+int jwt_verify_claims_str(zval *arr, char *key, char *str)
 {
     char *rs = jwt_hash_str_find_str(arr, key);
     if (rs && str && strcmp(rs, str)) {
@@ -302,6 +320,7 @@ int jwt_verify_claims(zval *arr, char *key, char *str)
     return 0;
 }
 
+/* array equals */
 int jwt_array_equals(zend_array *arr1, zend_array *arr2) {
     zend_ulong i;
     zval *value = NULL;
@@ -329,6 +348,7 @@ int jwt_array_equals(zend_array *arr1, zend_array *arr2) {
     return 0;
 }
 
+/* verify body */
 int jwt_verify_body(char *body, zval *return_value)
 {
     zend_class_entry *ce;
@@ -358,7 +378,7 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* iss */
-    if (jwt_verify_claims(return_value, "iss", JWT_G(iss))) {
+    if (jwt_verify_claims_str(return_value, "iss", JWT_G(iss))) {
         ce = jwt_invalid_issuer_cex;
         err_msg = "Invalid Issuer";
     }
@@ -375,7 +395,7 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* jti */
-    if (jwt_verify_claims(return_value, "jti", JWT_G(jti))) {
+    if (jwt_verify_claims_str(return_value, "jti", JWT_G(jti))) {
         ce = jwt_invalid_jti_cex;
         err_msg = "Invalid Jti";
     }
@@ -387,7 +407,7 @@ int jwt_verify_body(char *body, zval *return_value)
     }
 
     /* sub */
-    if (jwt_verify_claims(return_value, "sub", JWT_G(sub))) {
+    if (jwt_verify_claims_str(return_value, "sub", JWT_G(sub))) {
         ce = jwt_invalid_sub_cex;
         err_msg = "Invalid Sub";
     }
@@ -400,6 +420,7 @@ int jwt_verify_body(char *body, zval *return_value)
     return 0;
 }
 
+/* parse options */
 int jwt_parse_options(zval *options)
 {
     /* check options */
@@ -433,6 +454,7 @@ int jwt_parse_options(zval *options)
     return 0;
 }
 
+/* function jwt_encode() */
 PHP_FUNCTION(jwt_encode)
 {
     zval *payload = NULL, header;
@@ -523,6 +545,7 @@ encode_done:
     }
 }
 
+/* function jwt_decode() */
 PHP_FUNCTION(jwt_decode)
 {
     zend_string *token = NULL, *key = NULL;
@@ -650,39 +673,15 @@ PHP_GINIT_FUNCTION(jwt) {
 
 PHP_MINIT_FUNCTION(jwt)
 {
-    zend_class_entry ce;
-
-    /* SignatureInvalidException */
-    INIT_CLASS_ENTRY(ce, "SignatureInvalidException", NULL);
-    jwt_signature_invalid_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* BeforeValidException */
-    INIT_CLASS_ENTRY(ce, "BeforeValidException", NULL);
-    jwt_before_valid_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* ExpiredSignatureException */
-    INIT_CLASS_ENTRY(ce, "ExpiredSignatureException", NULL);
-    jwt_expired_signature_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* InvalidIssuerException */
-    INIT_CLASS_ENTRY(ce, "InvalidIssuerException", NULL);
-    jwt_invalid_issuer_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* InvalidAudException */
-    INIT_CLASS_ENTRY(ce, "InvalidAudException", NULL);
-    jwt_invalid_aud_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* InvalidJtiException */
-    INIT_CLASS_ENTRY(ce, "InvalidJtiException", NULL);
-    jwt_invalid_jti_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* InvalidIatException */
-    INIT_CLASS_ENTRY(ce, "InvalidIatException", NULL);
-    jwt_invalid_iat_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
-
-    /* InvalidSubException */
-    INIT_CLASS_ENTRY(ce, "InvalidSubException", NULL);
-    jwt_invalid_sub_cex = zend_register_internal_class_ex(&ce, zend_ce_exception);
+    /* register exception class */
+    jwt_signature_invalid_cex = jwt_register_class("SignatureInvalidException");
+    jwt_before_valid_cex = jwt_register_class("BeforeValidException");
+    jwt_expired_signature_cex = jwt_register_class("ExpiredSignatureException");
+    jwt_invalid_issuer_cex = jwt_register_class("InvalidIssuerException");
+    jwt_invalid_aud_cex = jwt_register_class("InvalidAudException");
+    jwt_invalid_jti_cex = jwt_register_class("InvalidJtiException");
+    jwt_invalid_iat_cex = jwt_register_class("InvalidIatException");
+    jwt_invalid_sub_cex = jwt_register_class("InvalidSubException");
 
     return SUCCESS;
 }
