@@ -48,6 +48,8 @@ PHP_JWT_API zend_class_entry *jwt_invalid_jti_cex;
 PHP_JWT_API zend_class_entry *jwt_invalid_iat_cex;
 PHP_JWT_API zend_class_entry *jwt_invalid_sub_cex;
 
+static zend_class_entry *jwt_ce;
+
 ZEND_DECLARE_MODULE_GLOBALS(jwt)
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_jwt_encode, 0, 0, 2)
@@ -454,9 +456,8 @@ int jwt_parse_options(zval *options)
     return 0;
 }
 
-/* function jwt_encode() */
-PHP_FUNCTION(jwt_encode)
-{
+/* Jwt encode */
+static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
     zval *payload = NULL, header;
     zend_string *key = NULL;
     smart_str json_header = {0}, json_payload = {0}, segments = {0};
@@ -545,9 +546,8 @@ encode_done:
     }
 }
 
-/* function jwt_decode() */
-PHP_FUNCTION(jwt_decode)
-{
+/* Jwt decode */
+static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
     zend_string *token = NULL, *key = NULL;
     zval *options = NULL;
     smart_str segments = {0};
@@ -652,10 +652,40 @@ decode_done:
     jwt_free(jwt);
 }
 
-const zend_function_entry jwt_functions[] = {
+/* function jwt_encode() */
+PHP_FUNCTION(jwt_encode)
+{
+    php_jwt_encode(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+/* function jwt_decode() */
+PHP_FUNCTION(jwt_decode)
+{
+    php_jwt_decode(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+/* JWT::encode() */
+PHP_METHOD(jwt, encode)
+{
+    php_jwt_encode(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+/* JWT::decode() */
+PHP_METHOD(jwt, decode)
+{
+    php_jwt_decode(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+
+static const zend_function_entry jwt_functions[] = {
     PHP_FE(jwt_encode, arginfo_jwt_encode)
     PHP_FE(jwt_decode, arginfo_jwt_decode)
     PHP_FE_END
+};
+
+static const zend_function_entry jwt_methods[] = {
+    PHP_ME(jwt, encode, arginfo_jwt_encode, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    PHP_ME(jwt, decode, arginfo_jwt_decode, ZEND_ACC_STATIC | ZEND_ACC_PUBLIC)
+    {NULL, NULL, NULL}
 };
 
 /* GINIT */
@@ -673,6 +703,11 @@ PHP_GINIT_FUNCTION(jwt) {
 
 PHP_MINIT_FUNCTION(jwt)
 {
+    zend_class_entry ce;
+
+    INIT_CLASS_ENTRY(ce, "Cdoco\\JWT", jwt_methods);
+    jwt_ce = zend_register_internal_class(&ce);
+
     /* register exception class */
     jwt_signature_invalid_cex = jwt_register_class("SignatureInvalidException");
     jwt_before_valid_cex = jwt_register_class("BeforeValidException");

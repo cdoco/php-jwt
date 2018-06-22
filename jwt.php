@@ -5,6 +5,8 @@ if(!extension_loaded('jwt')) {
 	dl('jwt.' . PHP_SHLIB_SUFFIX);
 }
 
+use Cdoco\JWT;
+
 $key = "example_key";
 $claims = array(
     "data" => [
@@ -17,7 +19,7 @@ $claims = array(
 );
 
 // default HS256 algorithm
-$token = jwt_encode($claims, $key);
+$token = JWT::encode($claims, $key);
 
 echo $token . PHP_EOL;
-print_r(jwt_decode($token, $key, ["aud" => ['yy'], 'leeway' => 2, "iss" => "http://example.org"]));
+print_r(JWT::decode($token, $key, ["aud" => ['yy'], 'leeway' => 2, "iss" => "http://example.org"]));
