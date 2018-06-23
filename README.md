@@ -56,6 +56,10 @@ $decoded_token = jwt_decode($token, $key);
 //    [sub] => 1234567890
 // )
 print_r($decoded_token);
+
+// or would you prefer to use a static method call
+$token = \Cdoco\JWT::encode($payload, $key);
+$decoded_token = \Cdoco\JWT::decode($token, $key);
 ```
 
 ## Algorithms and Usage

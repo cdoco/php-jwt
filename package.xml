@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" packagerversion="1.4.7" version="2.0" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd"> 
+ <name>jwt</name>
+ <channel>pecl.php.net</channel>
+ <summary>RFC 7519 OAuth JSON Web Token (JWT) implementation</summary>
+ <description>https://github.com/cdoco/php-jwt</description>
+ <lead>
+  <name>ZiHang Gao</name>
+  <user>cdoco</user>
+  <email>ocdoco@gmail.com</email>
+  <active>yes</active>
+ </lead>
+ <date>2018-06-15</date>
+ <time>17:40:00</time>
+ <version>
+  <release>0.2.3</release>
+  <api>0.2.3</api>
+ </version>
+ <stability>
+  <release>stable</release>
+  <api>stable</api>
+ </stability>
+ <license uri="http://www.php.net/license">PHP</license>
+ <notes>
+  - First release.
+ </notes>
+ <contents>
+  <dir name="/">
+   <file name="config.m4" role="src" />
+   <file name="php_jwt.h" role="src" />
+   <file name="openssl.c" role="src" />
+   <file name="jwt.c"     role="src" />
+   <file name="LICENSE"   role="doc" />
+   <file name="CREDITS"   role="doc" />
+   <file name="README.md" role="doc" />
+   <dir name="tests">
+    <file name="001.phpt" role="test" />
+    <file name="002.phpt" role="test" />
+    <file name="003.phpt" role="test" />
+    <file name="004.phpt" role="test" />
+    <file name="005.phpt" role="test" />
+    <file name="006.phpt" role="test" />
+    <file name="007.phpt" role="test" />
+    <file name="008.phpt" role="test" />
+    <file name="009.phpt" role="test" />
+    <file name="010.phpt" role="test" />
+    <file name="011.phpt" role="test" />
+   </dir>
+  </dir>
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>7.0.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.4.0</min>
+   </pearinstaller>
+  </required>
+ </dependencies>
+ <providesextension>jwt</providesextension>
+ <extsrcrelease />
+ <changelog>
+  <release>
+   <version>
+    <release>0.2.3</release>
+    <api>0.2.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2018-06-15</date>
+   <time>17:40:00</time>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+    - First release.
+   </notes>
+  </release>
+ </changelog>
+</package>
