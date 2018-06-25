@@ -729,9 +729,10 @@ PHP_MSHUTDOWN_FUNCTION(jwt)
 PHP_MINFO_FUNCTION(jwt)
 {
     php_info_print_table_start();
-    php_info_print_table_header(2, "jwt support", "enabled");
-    php_info_print_table_row(2, "Version", PHP_JWT_VERSION);
-    php_info_print_table_row(2, "JWT SSL library", "OpenSSL");
+    php_info_print_table_header(2, "JWT support", "enabled");
+    php_info_print_table_row(2, "JWT Version", PHP_JWT_VERSION);
+    php_info_print_table_row(2, "JWT Author", "ZiHang Gao <ocdoco@gmail.com>");
+    php_info_print_table_row(2, "JWT Issues", "https://github.com/cdoco/php-jwt/issues");
 
     /* openssl version info */
     php_info_print_table_row(2, "OpenSSL Library Version", SSLeay_version(SSLEAY_VERSION));
