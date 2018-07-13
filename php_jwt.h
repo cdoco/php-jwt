@@ -24,7 +24,7 @@
 extern zend_module_entry jwt_module_entry;
 #define phpext_jwt_ptr &jwt_module_entry
 
-#define PHP_JWT_VERSION "0.2.3"
+#define PHP_JWT_VERSION "0.2.4"
 
 #ifdef PHP_WIN32
 #	define PHP_JWT_API __declspec(dllexport)

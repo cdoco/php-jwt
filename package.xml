@@ -77,5 +77,22 @@
     - First release.
    </notes>
   </release>
+  <release>
+   <version>
+    <release>0.2.4</release>
+    <api>0.2.4</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2018-07-13</date>
+   <time>13:59:00</time>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+    - Support JWT object.
+    - Modify phpinfo display information.
+   </notes>
+  </release>
  </changelog>
 </package>
