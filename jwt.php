@@ -15,11 +15,11 @@ $claims = array(
     ],
     "sub" => "1234567890",
     "nbf" => time() + 1,
-    "aud" => ['yy'],
+    "aud" => 'yy',
 );
 
 // default HS256 algorithm
 $token = JWT::encode($claims, $key);
 
 echo $token . PHP_EOL;
-print_r(JWT::decode($token, $key, ["aud" => ['yy'], 'leeway' => 2, "iss" => "http://example.org"]));
+print_r(JWT::decode($token, $key, ["audx" => 'yy', 'leeway' => 2, "iss" => "http://example.org"]));
