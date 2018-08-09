@@ -1,12 +1,10 @@
-<div align="center">
-    <p><a target="_blank" href="https://jwt.io"><img src="https://jwt.io/img/logo-asset.svg" /></a></p>
-    <p>A PHP extension for <a target="_blank" href="https://tools.ietf.org/html/rfc7519">RFC 7519 OAuth JSON Web Token (JWT)</a></p>
-    <a target="_blank" href="https://travis-ci.org/cdoco/php-jwt" title="Build Status"><img src="https://travis-ci.org/cdoco/php-jwt.svg"></a>
-    <img src="https://img.shields.io/badge/PHP-%3E%3D7.0.0-blue.svg">
-    <img src="https://img.shields.io/badge/OpenSSL-%3E%3D1.0.1f-blue.svg">
-    <img src="https://img.shields.io/badge/branch-master-brightgreen.svg">
-    <img src="https://img.shields.io/github/repo-size/cdoco/php-jwt.svg">
-</div>
+[![Build Status][travis-image]][travis-url]
+![PHP](https://img.shields.io/badge/PHP-%3E%3D7.0.0-orange.svg)
+![OpenSSL](https://img.shields.io/badge/OpenSSL-%3E%3D1.0.1f-orange.svg)
+![branch](https://img.shields.io/badge/branch-master-brightgreen.svg)
+![license](https://img.shields.io/badge/License-PHP/3.01-blue.svg)
+
+> A PHP extension for [RFC 7519 OAuth JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 
 ## Requirement
 
@@ -349,4 +347,7 @@ ECDSA|ES256|ES384|ES512
 
 ## License
 
-PHP License. See the [LICENSE](LICENSE) file.
+PHP License 3.01. See the [LICENSE](LICENSE) file.
+
+[travis-url]: https://travis-ci.org/cdoco/php-jwt
+[travis-image]: https://travis-ci.org/cdoco/php-jwt.svg
