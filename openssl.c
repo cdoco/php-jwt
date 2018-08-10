@@ -24,10 +24,7 @@
 
 /* $Id$ */
 
-#include "php.h"
-#include "php_jwt.h"
-#include "zend_smart_str.h"
-#include "ext/standard/base64.h"
+#include <php_jwt.h>
 
 /* OpenSSL includes */
 #include <openssl/bio.h>

@@ -21,18 +21,22 @@
 #ifndef PHP_JWT_H
 #define PHP_JWT_H
 
+#include <php.h>
+#include <php_ini.h>
+
+#include <zend_smart_str.h>
+#include <zend_exceptions.h>
+
+#include <ext/spl/spl_exceptions.h>
+#include <ext/standard/base64.h>
+#include <ext/json/php_json.h>
+#include <ext/standard/info.h>
+#include <ext/standard/php_string.h>
+
 extern zend_module_entry jwt_module_entry;
 #define phpext_jwt_ptr &jwt_module_entry
 
 #define PHP_JWT_VERSION "0.2.4"
-
-#ifdef PHP_WIN32
-#	define PHP_JWT_API __declspec(dllexport)
-#elif defined(__GNUC__) && __GNUC__ >= 4
-#	define PHP_JWT_API __attribute__ ((visibility("default")))
-#else
-#	define PHP_JWT_API
-#endif
 
 #ifdef ZTS
 #include "TSRM.h"

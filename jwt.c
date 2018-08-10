@@ -22,31 +22,20 @@
 #include "config.h"
 #endif
 
-#include "php.h"
-#include "php_ini.h"
-
-#include "zend_smart_str.h"
-#include "zend_exceptions.h"
-#include "ext/spl/spl_exceptions.h"
-#include "ext/json/php_json.h"
-#include "ext/standard/base64.h"
-#include "ext/standard/info.h"
-#include "ext/standard/php_string.h"
+#include <php_jwt.h>
 
 /* OpenSSL includes */
 #include <openssl/conf.h>
 
-#include "php_jwt.h"
-
 /* Exceptions */
-PHP_JWT_API zend_class_entry *jwt_signature_invalid_cex;
-PHP_JWT_API zend_class_entry *jwt_before_valid_cex;
-PHP_JWT_API zend_class_entry *jwt_expired_signature_cex;
-PHP_JWT_API zend_class_entry *jwt_invalid_issuer_cex;
-PHP_JWT_API zend_class_entry *jwt_invalid_aud_cex;
-PHP_JWT_API zend_class_entry *jwt_invalid_jti_cex;
-PHP_JWT_API zend_class_entry *jwt_invalid_iat_cex;
-PHP_JWT_API zend_class_entry *jwt_invalid_sub_cex;
+static zend_class_entry *jwt_signature_invalid_cex;
+static zend_class_entry *jwt_before_valid_cex;
+static zend_class_entry *jwt_expired_signature_cex;
+static zend_class_entry *jwt_invalid_issuer_cex;
+static zend_class_entry *jwt_invalid_aud_cex;
+static zend_class_entry *jwt_invalid_jti_cex;
+static zend_class_entry *jwt_invalid_iat_cex;
+static zend_class_entry *jwt_invalid_sub_cex;
 
 static zend_class_entry *jwt_ce;
 
