@@ -1,10 +1,13 @@
 dnl $Id$
 dnl config.m4 for extension jwt
 
+PHP_ARG_ENABLE(jwt, whether to enable jwt support,
+  [  --enable-jwt             Enable jwt support])
+
 PHP_ARG_WITH(openssl, whether to use OpenSSL library,
   [  --with-openssl[=DIR]     Ignore presence of OpenSSL library (requires OpenSSL >= 0.9.8)])
 
-if test "$PHP_OPENSSL" != "no"; then
+if test "$PHP_JWT" != "no"; then
 
   SEARCH_PATH="/usr/local /usr /usr/local/opt"
   SEARCH_FOR="/include/openssl/hmac.h"
