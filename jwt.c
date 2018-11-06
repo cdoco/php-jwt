@@ -349,7 +349,12 @@ int jwt_verify_body(char *body, zval *return_value)
         err_msg = msg;                  \
     } while(0);
 
-    /* Expiration */
+    /* set expiration and not before */
+    JWT_G(expiration) = jwt_hash_str_find_long(return_value, "exp");
+    JWT_G(not_before) = jwt_hash_str_find_long(return_value, "nbf");
+    JWT_G(iat) = jwt_hash_str_find_long(return_value, "iat");
+    
+    /* expiration */
     if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration))
         FORMAT_CEX_MSG("Expired token", jwt_expired_signature_cex);
 
@@ -357,14 +362,13 @@ int jwt_verify_body(char *body, zval *return_value)
     if (JWT_G(not_before) && JWT_G(not_before) > (curr_time + JWT_G(leeway)))
         FORMAT_CEX_TIME(JWT_G(not_before), jwt_before_valid_cex);
 
+    /* iat */
+    if (JWT_G(iat) && JWT_G(iat) > (curr_time + JWT_G(leeway)))
+        FORMAT_CEX_TIME(JWT_G(iat), jwt_invalid_iat_cex);
+
     /* iss */
     if (jwt_verify_claims_str(return_value, "iss", JWT_G(iss)))
         FORMAT_CEX_MSG("Invalid Issuer", jwt_invalid_issuer_cex);
-
-    /* iat */
-    if (JWT_G(iat) && JWT_G(iat) > (curr_time + JWT_G(leeway))) {
-        FORMAT_CEX_TIME(JWT_G(iat), jwt_invalid_iat_cex);
-    }
 
     /* jti */
     if (jwt_verify_claims_str(return_value, "jti", JWT_G(jti)))
@@ -462,11 +466,6 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
         goto encode_done;
     }
 
-    /* set expiration and not before */
-    JWT_G(expiration) = jwt_hash_str_find_long(payload, "exp");
-    JWT_G(not_before) = jwt_hash_str_find_long(payload, "nbf");
-    JWT_G(iat) = jwt_hash_str_find_long(payload, "iat");
-    
     /* init */
     array_init(&header);
 
