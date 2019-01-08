@@ -331,10 +331,6 @@ int jwt_verify_body(char *body, zval *return_value)
     time_t curr_time = time((time_t*)NULL);
     zend_string *vs = jwt_b64_url_decode(body);
 
-    /* decode json to array */
-    php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
-    zend_string_free(vs);
-
 #define FORMAT_CEX_TIME(t, cex) do {                                                            \
        struct tm *timeinfo;                                                                     \
        char buf[128];                                                                           \
@@ -349,55 +345,65 @@ int jwt_verify_body(char *body, zval *return_value)
         err_msg = msg;                  \
     } while(0);
 
-    /* set expiration and not before */
-    JWT_G(expiration) = jwt_hash_str_find_long(return_value, "exp");
-    JWT_G(not_before) = jwt_hash_str_find_long(return_value, "nbf");
-    JWT_G(iat) = jwt_hash_str_find_long(return_value, "iat");
-    
-    /* expiration */
-    if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration))
-        FORMAT_CEX_MSG("Expired token", jwt_expired_signature_cex);
-
-    /* not before */
-    if (JWT_G(not_before) && JWT_G(not_before) > (curr_time + JWT_G(leeway)))
-        FORMAT_CEX_TIME(JWT_G(not_before), jwt_before_valid_cex);
-
-    /* iat */
-    if (JWT_G(iat) && JWT_G(iat) > (curr_time + JWT_G(leeway)))
-        FORMAT_CEX_TIME(JWT_G(iat), jwt_invalid_iat_cex);
-
-    /* iss */
-    if (jwt_verify_claims_str(return_value, "iss", JWT_G(iss)))
-        FORMAT_CEX_MSG("Invalid Issuer", jwt_invalid_issuer_cex);
-
-    /* jti */
-    if (jwt_verify_claims_str(return_value, "jti", JWT_G(jti)))
-        FORMAT_CEX_MSG("Invalid Jti", jwt_invalid_jti_cex);
-
-    /* aud */
-    size_t flag = 0;
-    zval *zv_aud = zend_hash_str_find(Z_ARRVAL_P(return_value), "aud", strlen("aud"));
-
-    if (zv_aud && JWT_G(aud)) {
-        switch(Z_TYPE_P(zv_aud)) {
-        case IS_ARRAY:
-            if (jwt_array_equals(Z_ARRVAL_P(JWT_G(aud)), Z_ARRVAL_P(zv_aud))) flag = 1;
-            break;
-        case IS_STRING:
-            if (strcmp(Z_STRVAL_P(JWT_G(aud)), Z_STRVAL_P(zv_aud))) flag = 1;
-            break;
-        default:
-            php_error_docref(NULL, E_WARNING, "Aud type must be string or array");
-            break;
-        }
-
-        if (flag) FORMAT_CEX_MSG("Invalid Aud", jwt_invalid_aud_cex);
+    if (!vs) {
+        FORMAT_CEX_MSG("Invalid body", spl_ce_UnexpectedValueException);
+        goto done;
     }
 
-    /* sub */
-    if (jwt_verify_claims_str(return_value, "sub", JWT_G(sub)))
-        FORMAT_CEX_MSG("Invalid Sub", jwt_invalid_sub_cex);
+    /* decode json to array */
+    php_json_decode_ex(return_value, ZSTR_VAL(vs), ZSTR_LEN(vs), PHP_JSON_OBJECT_AS_ARRAY, 512);
+    zend_string_free(vs);
 
+    if (Z_TYPE(*return_value) == IS_ARRAY) {
+        /* set expiration and not before */
+        JWT_G(expiration) = jwt_hash_str_find_long(return_value, "exp");
+        JWT_G(not_before) = jwt_hash_str_find_long(return_value, "nbf");
+        JWT_G(iat) = jwt_hash_str_find_long(return_value, "iat");
+
+        /* expiration */
+        if (JWT_G(expiration) && (curr_time - JWT_G(leeway)) >= JWT_G(expiration))
+            FORMAT_CEX_MSG("Expired token", jwt_expired_signature_cex);
+        /* not before */
+        if (JWT_G(not_before) && JWT_G(not_before) > (curr_time + JWT_G(leeway)))
+            FORMAT_CEX_TIME(JWT_G(not_before), jwt_before_valid_cex);
+        /* iat */
+        if (JWT_G(iat) && JWT_G(iat) > (curr_time + JWT_G(leeway)))
+            FORMAT_CEX_TIME(JWT_G(iat), jwt_invalid_iat_cex);
+        /* iss */
+        if (jwt_verify_claims_str(return_value, "iss", JWT_G(iss)))
+            FORMAT_CEX_MSG("Invalid Issuer", jwt_invalid_issuer_cex);
+        /* jti */
+        if (jwt_verify_claims_str(return_value, "jti", JWT_G(jti)))
+            FORMAT_CEX_MSG("Invalid Jti", jwt_invalid_jti_cex);
+
+        /* aud */
+        size_t flag = 0;
+        zval *zv_aud = zend_hash_str_find(Z_ARRVAL_P(return_value), "aud", strlen("aud"));
+
+        if (zv_aud && JWT_G(aud)) {
+            switch(Z_TYPE_P(zv_aud)) {
+            case IS_ARRAY:
+                if (jwt_array_equals(Z_ARRVAL_P(JWT_G(aud)), Z_ARRVAL_P(zv_aud))) flag = 1;
+                break;
+            case IS_STRING:
+                if (strcmp(Z_STRVAL_P(JWT_G(aud)), Z_STRVAL_P(zv_aud))) flag = 1;
+                break;
+            default:
+                php_error_docref(NULL, E_WARNING, "Aud type must be string or array");
+                break;
+            }
+
+            if (flag) FORMAT_CEX_MSG("Invalid Aud", jwt_invalid_aud_cex);
+        }
+
+        /* sub */
+        if (jwt_verify_claims_str(return_value, "sub", JWT_G(sub)))
+            FORMAT_CEX_MSG("Invalid Sub", jwt_invalid_sub_cex);
+    } else {
+        FORMAT_CEX_MSG("Json decode error", spl_ce_UnexpectedValueException);
+    }
+
+done:
     if (err_msg) {
         zend_throw_exception(ce, err_msg, 0);
         return FAILURE;
@@ -601,11 +607,6 @@ static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
         goto decode_done;
     }
 
-    /* parse body */
-    if (jwt_verify_body(body, return_value) == FAILURE) {
-        goto decode_done;
-    }
-
     /* verify */
     if (jwt->alg == JWT_ALG_NONE) {
         /* done */
@@ -622,9 +623,14 @@ static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
         if (jwt_verify(jwt, sig)) {
             zend_throw_exception(jwt_signature_invalid_cex, "Signature verification failed", 0);
         }
+
+        smart_str_free(&segments);
     }
 
-    smart_str_free(&segments);
+    /* verify body */
+    if (jwt_verify_body(body, return_value) == FAILURE) {
+        goto decode_done;
+    }
 
 decode_done:
     efree(head);
