@@ -200,18 +200,15 @@ void jwt_b64_url_encode_ex(char *str)
 /* base64 encode */
 char *jwt_b64_url_encode(zend_string *input)
 {
-    zend_string *b64_str = NULL;
-    b64_str = php_base64_encode((const unsigned char *)ZSTR_VAL(input), ZSTR_LEN(input));
+    zend_string *b64_str = php_base64_encode((const unsigned char *)ZSTR_VAL(input), ZSTR_LEN(input));
 
     /* replace str */
-    zend_string *new = zend_string_dup(b64_str, 0);
+    char *new = estrdup(ZSTR_VAL(b64_str));
+    jwt_b64_url_encode_ex(new);
 
-    jwt_b64_url_encode_ex(ZSTR_VAL(new));
-
-    zend_string_free(new);
     zend_string_free(b64_str);
 
-    return ZSTR_VAL(new);
+    return new;
 }
 
 /* base64 decode */
@@ -450,9 +447,9 @@ int jwt_parse_options(zval *options)
 static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
     zval *payload = NULL, header;
     zend_string *key = NULL;
-    smart_str json_header = {0}, json_payload = {0}, segments = {0};
+    smart_str json_header = {0}, json_payload = {0};
 
-    char *sig = NULL, *alg = "HS256";
+    char *sig = NULL, *alg = "HS256", *buf = NULL;
     unsigned int sig_len;
     size_t alg_len;
     jwt_t *jwt = NULL;
@@ -481,43 +478,52 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
 
     /* json encode */
     php_json_encode(&json_header, &header, 0);
+    char *header_b64 = jwt_b64_url_encode(json_header.s);
+
     php_json_encode(&json_payload, payload, 0);
+    char *payload_b64 = jwt_b64_url_encode(json_payload.s);
 
     zval_ptr_dtor(&header);
-
-    /* base64 encode */
-    smart_str_appends(&segments, jwt_b64_url_encode(json_header.s));
-    smart_str_appends(&segments, ".");
-    smart_str_appends(&segments, jwt_b64_url_encode(json_payload.s));
-
     smart_str_free(&json_header);
     smart_str_free(&json_payload);
+
+    buf = (char *)emalloc(strlen(header_b64) + strlen(payload_b64) + 1);
+    strcpy(buf, header_b64);
+    strcat(buf, ".");
+    strcat(buf, payload_b64);
+
+    efree(header_b64);
+    efree(payload_b64);
 
     /* sign */
     if (jwt->alg == JWT_ALG_NONE) {
         /* alg none */
-        smart_str_appendl(&segments, ".", 1);
+        buf = (char *)erealloc(buf, strlen(buf) + 1);
+        strcat(buf, ".");
     } else {
         /* set jwt struct */
         jwt->key = key;
-        jwt->str = segments.s;
+        jwt->str = zend_string_init(buf, strlen(buf), 0);
 
         /* sign */
         if (jwt_sign(jwt, &sig, &sig_len)) {
             zend_throw_exception(spl_ce_DomainException, "OpenSSL unable to sign data", 0);
+            zend_string_free(jwt->str);
             goto encode_done;
         }
 
         /* string concatenation */
-        smart_str_appends(&segments, ".");
-
         zend_string *sig_str = zend_string_init(sig, sig_len, 0);
+        char *sig_b64 = jwt_b64_url_encode(sig_str);
 
-        smart_str_appends(&segments, jwt_b64_url_encode(sig_str));
+        buf = (char *)erealloc(buf, strlen(sig_b64) + strlen(buf) + 1);
+        strcat(buf, ".");
+        strcat(buf, sig_b64);
+
+        efree(sig_b64);
+        zend_string_free(jwt->str);
         zend_string_free(sig_str);
     }
-
-    smart_str_0(&segments);
 
 encode_done:
     /* free */
@@ -526,16 +532,18 @@ encode_done:
 
     jwt_free(jwt);
 
-    if (segments.s) {
-        RETURN_STR(segments.s);
-    }
+    char *ret = alloca(strlen(buf));
+    strcpy(ret, buf);
+    efree(buf);
+
+    RETURN_STRING(ret);
 }
 
 /* Jwt decode */
 static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
     zend_string *token = NULL, *key = NULL;
     zval *options = NULL;
-    smart_str segments = {0};
+    smart_str buf = {0};
     char *body = NULL, *sig = NULL;
     jwt_t *jwt = NULL;
 
@@ -614,17 +622,17 @@ static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
         /* set jwt struct */
         jwt->key = key;
 
-        smart_str_appends(&segments, head);
-        smart_str_appends(&segments, ".");
-        smart_str_appends(&segments, body);
+        smart_str_appends(&buf, head);
+        smart_str_appends(&buf, ".");
+        smart_str_appends(&buf, body);
 
-        jwt->str = segments.s;
+        jwt->str = buf.s;
 
         if (jwt_verify(jwt, sig)) {
             zend_throw_exception(jwt_signature_invalid_cex, "Signature verification failed", 0);
         }
 
-        smart_str_free(&segments);
+        smart_str_free(&buf);
     }
 
     /* verify body */
