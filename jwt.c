@@ -630,9 +630,8 @@ static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
 
         if (jwt_verify(jwt, sig)) {
             zend_throw_exception(jwt_signature_invalid_cex, "Signature verification failed", 0);
+            goto decode_done;
         }
-
-        smart_str_free(&buf);
     }
 
     /* verify body */
@@ -643,6 +642,7 @@ static void php_jwt_decode(INTERNAL_FUNCTION_PARAMETERS) {
 decode_done:
     efree(head);
     jwt_free(jwt);
+    smart_str_free(&buf);
 }
 
 /* function jwt_encode() */

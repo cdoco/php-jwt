@@ -8,7 +8,7 @@ $hmackey = "example-hmac-key";
 
 try {
     $decoded_token = jwt_decode('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjp7Im5hbWUiOiJaaUhhbmcgR2FvIiwiYWRtaW4iOnRydWV9LCJzdWIiOiIxMjM0NTY3ODkwIiwibmJmIjoxNTQ2ODQ4CJhdWQiOiJ5eSJ9.fDqiF-cCIvlcscIdz7dcFJoYGBcvHtI6MWB5IWG0VHA', $hmackey, ['algorithm' => 'HS256']);
-} catch (UnexpectedValueException $e) {
+} catch (SignatureInvalidException $e) {
      // Handle expired token
      echo "FAIL\n";
 }
