@@ -516,9 +516,11 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
         zend_string *sig_str = zend_string_init(sig, sig_len, 0);
         char *sig_b64 = jwt_b64_url_encode(sig_str);
 
-        buf = (char *)erealloc(buf, strlen(sig_b64) + strlen(buf) + 1);
-        strcat(buf, ".");
-        strcat(buf, sig_b64);
+        char *tmp = (char *)emalloc(strlen(sig_b64) + strlen(buf) + 1);
+        sprintf(tmp, "%s.%s", buf, sig_b64);
+
+        efree(buf);
+        buf = tmp;
 
         efree(sig_b64);
         zend_string_free(jwt->str);
