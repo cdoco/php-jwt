@@ -498,11 +498,11 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
 
     /* sign */
     if (jwt->alg == JWT_ALG_NONE) {
-		buflen+=1;
+	buflen += 1;
         /* alg none */
         buf = (char *)erealloc(buf, buflen);
         strcat(buf, ".");
-		buf[buflen]='\0';
+	buf[buflen] = '\0';
     } else {
         /* set jwt struct */
         jwt->key = key;
@@ -519,7 +519,7 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
         zend_string *sig_str = zend_string_init(sig, sig_len, 0);
         char *sig_b64 = jwt_b64_url_encode(sig_str);
 
-		buflen = strlen(sig_b64) + strlen(buf) + 2;
+	buflen = strlen(sig_b64) + strlen(buf) + 2;
         char *tmp = (char *)ecalloc(buflen, 1);
         sprintf(tmp, "%s.%s", buf, sig_b64);
 
@@ -538,7 +538,7 @@ encode_done:
 
     jwt_free(jwt);
 
-	RETVAL_STRINGL(buf, strlen(buf));
+    RETVAL_STRINGL(buf, strlen(buf));
     efree(buf);
 }
 
