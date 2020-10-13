@@ -487,7 +487,7 @@ static void php_jwt_encode(INTERNAL_FUNCTION_PARAMETERS) {
     smart_str_free(&json_header);
     smart_str_free(&json_payload);
 
-	int buflen = strlen(header_b64) + strlen(payload_b64) + 2;
+    int buflen = strlen(header_b64) + strlen(payload_b64) + 2;
     buf = (char *)ecalloc(buflen, 1);
     strcpy(buf, header_b64);
     strcat(buf, ".");
