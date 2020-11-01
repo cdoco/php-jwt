@@ -25,14 +25,14 @@ $ make && make install
 
 ```php
 $key = "example-hmac-key";
-$payload = array(
+$payload = [
     "data" => [
         "name" => "ZiHang Gao",
         "admin" => true
     ],
     "iss" => "http://example.org",
     "sub" => "1234567890",
-);
+];
 
 // default HS256 algorithm
 $token = jwt_encode($payload, $key);
